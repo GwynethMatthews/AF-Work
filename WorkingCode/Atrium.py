@@ -156,13 +156,17 @@ class Atrium():
             np.random.seed(self.seed_connect_para)
             num_rand_para = np.random.rand(L*L)
             
-            for j in self.index:
+            if self.model == 1:
                 
-                if d > num_rand_dysfunc[j]: # dysfunctional
-                    self.dysfunctional_cells[j] = False
-                    
-                if d <= num_rand_dysfunc[j]: # functional
-                    self.dysfunctional_cells[j] = True
+                for j in self.index:
+                
+                    if d > num_rand_dysfunc[j]: # dysfunctional
+                        self.dysfunctional_cells[j] = False
+                        
+                    if d <= num_rand_dysfunc[j]: # functional
+                        self.dysfunctional_cells[j] = True
+                        
+            for j in self.index:
                 
                 if num_rand_para[j] <= self.parallel_prob:
                     
@@ -199,8 +203,8 @@ class Atrium():
                     else:
                         
                         if num_rand_tran1[j] <= self.transverse_prob_l:
-                            self.neighbours[j+self.start_n_down_left] = j+L
-                            self.neighbours[j+L+self.start_n_up_right] = j
+                            self.neighbours[j + (L * L * 4)] = j+L
+                            self.neighbours[j + L + (L * L)] = j
                             
                         if num_rand_tran2 [j] <= self.transverse_prob_r:
                             if j not in self.last_col:

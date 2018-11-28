@@ -11,7 +11,7 @@ from matplotlib import collections
 
 # Initiating the Atrium
 
-A = AC.Atrium(hexagonal = False, model = 3, v_para = 0.8, v_tran_1 = 0.8,
+A = AC.Atrium(hexagonal = True, model = 1, v_para = 0.8, v_tran_1 = 0.8,
                v_tran_2 = 0.8, d = 0.05, threshold_cells = 2, threshold = 0.25,
                e = 0.05, s1 = 1520, s2 = 250, s3 = 230, s4 = 204)
 
