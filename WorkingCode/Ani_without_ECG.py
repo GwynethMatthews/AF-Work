@@ -11,9 +11,9 @@ from matplotlib import collections
 
 # Initiating the Atrium
 
-A = AC.Atrium(hexagonal = True, model = 1, v_para = 0.8, v_tran_1 = 0.8,
-               v_tran_2 = 0.8, d = 0.05, threshold_cells = 2, threshold = 0.25,
-               e = 0.05, s1 = 1520, s2 = 250, s3 = 230, s4 = 204)
+A = AC.Atrium(hexagonal = True, model = 3, v_para = 1, v_tran_1 = 0.7,
+               v_tran_2 = 0.7, d = 0.05, threshold_cells = 2, threshold = 0.25,
+               e = 0.05, s1 = 152, s2 = 32522, s3 = 335298, s4 = 7024)
 
 ##############################################################################
 
@@ -45,13 +45,13 @@ def update2(frame_number,collection,A):
     A.Conduct()
     
     # WITH CONVOLUTION
-    #convolution = gaussian_filter(A.phases.reshape([A.L, A.L]), sigma=0.65,
-    #                              mode = ('wrap', 'constant'),cval = A.rp)
-    #data = np.ravel(convolution)
-    #collection.set_array(data)
+    convolution = gaussian_filter(A.phases.reshape([A.L, A.L]), sigma=0.5,
+                                  mode = ('wrap', 'constant'),cval = A.rp + 1)
+    data = np.ravel(convolution)
+    collection.set_array(data)
     
     # WITHOUT CONVOLUTION
-    collection.set_array(np.array(A.phases))
+    #collection.set_array(np.array(A.phases))
     
     return ax,
 

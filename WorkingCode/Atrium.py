@@ -10,7 +10,7 @@ class Atrium():
     def __init__(self, hexagonal = False, model = 1, L = 200, v_para = 1,
                  v_tran_1 = 0.1, v_tran_2 = 0.6, d = 0.05, threshold_cells = 1,
                  threshold = 0.25, e = 0.05, rp = 50, tot_time = 10**6, 
-                 pace_rate = 220, s1 = 10, s2 = 20, s3 = 30, s4 = 40):
+                 pace_rate = 220, s1 = 1, s2 = 2, s3 = 3, s4 = 4):
         
         # System Parameters
         self.hexagonal = hexagonal
@@ -284,10 +284,12 @@ class Atrium():
             for i in range(len(neighbours_list)):
                 
                 if resting_neighbours[i] != 0:
-                    
                     inward_current[np.array(neighbours_list[i],dtype = int)] += float(1) / np.array(resting_neighbours[i])
-                
-            get_excited = np.where(inward_current >= self.threshold)[0]
+            
+            #get_excited = np.where(inward_current >= self.threshold)[0]
+            
+            threshold = np.random.rand(self.L * self.L)* (0.5) 
+            get_excited = self.index[inward_current >= threshold]
             
             self.tbe[get_excited] = True
         
