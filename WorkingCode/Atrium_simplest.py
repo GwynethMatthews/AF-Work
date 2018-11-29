@@ -4,6 +4,23 @@
 import numpy as np
 import pickle
 
+def mode(data):
+    counts = {}
+    
+    for x in data.flatten():
+        
+        counts[x] = counts.get(x,0) + 1
+        maxcount = max(counts.values())#
+        
+    modelist = []
+    
+    for x in counts:
+        
+        if counts[x] == maxcount:
+            modelist.append(x)
+            
+    return modelist[0]
+
 class Atrium():
     """Creates the myocardium's structure.
     """

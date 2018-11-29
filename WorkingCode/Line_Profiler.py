@@ -1,5 +1,5 @@
 #import Atrium_class as AC
-import Atrium2 as AC
+import Atrium as AC
 #import Risk_Curve as RC
 #import cProfile
 #import pstats
@@ -8,13 +8,15 @@ import Atrium2 as AC
                  ,pace_rate = 220,seed1 = 1,seed2=2,seed3=3"""
    
 from line_profiler import LineProfiler            
-A= AC.Atrium()        
+A= AC.Atrium(tot_time = 10**4)        
 lp = LineProfiler()
 lp_wrapper = lp(A.CMP2D)
 lp.add_function(A.CMP2D_timestep)
 lp.add_function(A.SinusRhythm)
 lp.add_function(A.Conduct)
 lp.add_function(A.Relaxing)
+lp.add_function(A.TimeInAF)
+#lp.add_function(mode)
 lp_wrapper()
 lp.print_stats()
 #from line_profiler import LineProfiler            

@@ -1,6 +1,8 @@
 import numpy as np
-
+import scipy.stats as stats
 """ Standard Conduction Model"""
+
+
 class Atrium():
     """Creates the myocardium's structure.
     Model 1 = standard CMP model, 
@@ -62,16 +64,18 @@ class Atrium():
 
         # Measurable Variables
         self.excitations = np.zeros(L*L)
+        self.AF = False
+        self.sources  = []
         self.t = 0
         self.tot_AF = 0 # overall
         self.t_AF = 0 # in this episode
         self.t_SR = 0 # in this period of SR
 
         # Neighbours
-        if self.hexagonal == False:
+        if self.hexagonal == False: # up, right, down, left 
             self.neighbours = np.full(((L*L)*4),fill_value = None,dtype = float)
             
-        if self.hexagonal == True:
+        if self.hexagonal == True: # up_left, up_right, right, down_right, down_left, left
             self.neighbours = np.full(((L*L)*6),fill_value = None,dtype = float)        
 
         # For ECG
@@ -136,12 +140,11 @@ class Atrium():
                         self.neighbours[j + (L * L * 2)] = j + L
                         self.neighbours[j + L] = j
             
-            if self.model ==3:
                 
-                self.list_of_neighbours =  [[self.neighbours[i],
-                     self.neighbours[i + (L * L)],
-                     self.neighbours[i + (L * L * 2)],
-                     self.neighbours[i + (L * L * 3)]] for i in self.index] 
+            self.list_of_neighbours =  [[self.neighbours[i],
+                 self.neighbours[i + (L * L)],
+                 self.neighbours[i + (L * L * 2)],
+                 self.neighbours[i + (L * L * 3)]] for i in self.index] 
                    
         
         if self.hexagonal == True:
@@ -211,20 +214,18 @@ class Atrium():
                                 self.neighbours[j + (L * L * 4)] = j + L + 1
                                 self.neighbours[j + L + 1] = j
                                 
-            if self.model == 3:
                 
-                self.list_of_neighbours =  [[self.neighbours[i],
-                     self.neighbours[i + (L * L)],
-                     self.neighbours[i + (L * L * 2)],
-                     self.neighbours[i + (L * L * 3)],
-                     self.neighbours[i + (L * L * 4)],
-                     self.neighbours[i + (L * L * 5)]] for i in self.index]  
+            self.list_of_neighbours =  [[self.neighbours[i],
+                 self.neighbours[i + (L * L)],
+                 self.neighbours[i + (L * L * 2)],
+                 self.neighbours[i + (L * L * 3)],
+                 self.neighbours[i + (L * L * 4)],
+                 self.neighbours[i + (L * L * 5)]] for i in self.index]  
         
-        if self.model == 3:
             
-            self.neighbour_list = np.array([[x for x in 
-                                     self.list_of_neighbours[i] if str(x) 
-                                     != 'nan'] for i in self.index])
+        self.neighbour_list = np.array([[x for x in 
+                                 self.list_of_neighbours[i] if str(x) 
+                                 != 'nan'] for i in self.index])
                     
         
         if self.model == 1:
@@ -255,7 +256,7 @@ class Atrium():
         self.resting[self.states[-1]] = True
         
         del self.states[-1]
-        self.states.insert(0,self.index[self.tbe])
+        self.states.insert(0, self.index[self.tbe])
         
     def Relaxing_ani(self):
 
@@ -269,7 +270,7 @@ class Atrium():
         self.resting[self.states[-1]] = True
         
         del self.states[-1]
-        self.states.insert(0,self.index[self.tbe])   
+        self.states.insert(0, self.index[self.tbe])   
         
     def Conduct(self):
         
@@ -278,6 +279,7 @@ class Atrium():
         if self.model == 3:
             
             neighbours_list = [[y for y in self.neighbour_list[i] if self.resting[int(y)] == True] for i in x]
+            print(neighbours_list)
             resting_neighbours = list(map(len,neighbours_list))
             inward_current = np.zeros(self.L * self.L)
             
@@ -333,6 +335,37 @@ class Atrium():
         
         self.tbe[self.states[0]] = False
 
+    def TimeInAF(self):
+        self.excitations[self.states[0]] += 1
+        #if self.t in [396,397,398,399,400,401]:
+        #    print(self.t)
+        #    print(self.phases[23280])
+        #    print(self.resting[23280])
+        pacemaker_mode = int(np.average(self.excitations[self.first_col]) + 0.5)
+       #print(pacemaker_mode)
+       # print(self.excitations[9004])
+        if self.AF == False:
+
+            possible_AF_locs = np.where(self.excitations > pacemaker_mode)[0]
+        
+            neighbours_list = [[y for y in self.neighbour_list[i] if self.tbe[int(y)] == True] for i in possible_AF_locs]
+            tbe_neighbours = np.array(list(map(len,neighbours_list)))
+   
+            if len(np.where(tbe_neighbours > 1)[0]) > 0:
+  
+                self.AF = True
+                self.sources.extend(possible_AF_locs[np.where(tbe_neighbours)])
+                print(self.sources)
+
+                print(self.t)
+                
+        if self.AF == True:
+            if max(self.excitations[np.array(self.sources)]) <= pacemaker_mode:
+                self.AF = False
+                print(self.AF)
+            
+        
+        
     def CMP2D_timestep(self):
 
         if np.remainder(self.t, self.pace_rate) == 0:
@@ -340,7 +373,7 @@ class Atrium():
             
         self.Relaxing()
         self.Conduct()
-        
+        self.TimeInAF()
         self.t += 1
             
     def CMP2D(self):
@@ -351,3 +384,5 @@ class Atrium():
             
             self.CMP2D_timestep()
            
+#A = Atrium()
+#A.CMP2D()
