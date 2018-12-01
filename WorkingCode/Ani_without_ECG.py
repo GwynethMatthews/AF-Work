@@ -14,23 +14,19 @@ from matplotlib import collections
 #A = AC.Atrium(hexagonal = False, model = 3, L = 200, v_para = 0.6, v_tran_1 = 0.6,
 #               v_tran_2 = 0.6, d = 0.05, threshold_cells = 2, threshold = 0.25,
 #               e = 0.05, s1 = 152, s2 = 32522, s3 = 335298, s4 = 74)
+#Paroxysmal AF
 A = AC.Atrium(hexagonal = False, model = 1, L = 200, v_para = 1,
-                 v_tran_1 = 0.1, v_tran_2 = 0.6, d = 0.05, threshold_cells = 1,
+                 v_tran_1 = 0.14, v_tran_2 = 0.6, d = 0.05, threshold_cells = 1,
                  threshold = 0.25, e = 0.05, rp = 50, tot_time = 10**6, 
-                 pace_rate = 220, s1 = 10, s2 = 4, s3 = 3, s4 = 4)
+                 pace_rate = 220, s1 = 100, s2 = 475760, s3 = 3306, s4 = 476)
 
 ##############################################################################
-
+#A.CMP2D()
 # Animation function
 
 def update1(frame_number, mat,A):
     """Next frame update for animation without ECG"""
-    if frame_number in A.pace:
-        A.SinusRhythm()
-    A.Relaxing_ani()
-    A.Conduct()
-    A.TimeInAF()
-    A.t += 1
+    A.CMP2D_timestep_ani()
     # WITH CONVOLUTION
     #convolution = gaussian_filter(A.phases.reshape([A.L, A.L]), sigma=1,
     #                              mode = ('wrap', 'constant'))
@@ -44,7 +40,7 @@ def update1(frame_number, mat,A):
     #    print(A.resting[23280])
         #if 23280 in A.states[0]:
          #   print('fuck')
-    A.phases[np.array([5490])] = 3
+    A.phases[8400] = 30
     data = A.phases.reshape([A.L, A.L])
     mat.set_data(data)
     
@@ -52,10 +48,7 @@ def update1(frame_number, mat,A):
 
 def update2(frame_number,collection,A):
     """Next frame update for animation without ECG"""
-    if frame_number in A.pace:
-        A.SinusRhythm()
-    A.Relaxing_ani()
-    A.Conduct()
+    A.CMP2D_timestep_ani()
     
     # WITH CONVOLUTION
     convolution = gaussian_filter(A.phases.reshape([A.L, A.L]), sigma=0.5,

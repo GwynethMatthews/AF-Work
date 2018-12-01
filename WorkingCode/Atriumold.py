@@ -10,7 +10,7 @@ class Atrium():
     Model 3 = source-sink model
     """
     def __init__(self, hexagonal = False, model = 1, L = 200, v_para = 1,
-                 v_tran_1 = 0.5, v_tran_2 = 0.6, d = 0.05, threshold_cells = 1,
+                 v_tran_1 = 0.1, v_tran_2 = 0.6, d = 0.05, threshold_cells = 1,
                  threshold = 0.25, e = 0.05, rp = 50, tot_time = 10**6, 
                  pace_rate = 220, s1 = 1, s2 = 2, s3 = 3, s4 = 4):
         
@@ -148,7 +148,7 @@ class Atrium():
                  self.neighbours[3][i]] for i in self.index] 
                    
         
-        else:    #if self.hexagonal == True:
+        if self.hexagonal == True:
             np.random.seed(self.seed_dysfunc)
             num_rand_dysfunc = np.random.rand(L*L)
             
@@ -196,8 +196,7 @@ class Atrium():
                         self.neighbours[0][j + L] = j
                         
                 #odd
-                else:
-                #if j in self.position[np.arange(1, L, 2)]:
+                if j in self.position[np.arange(1, L, 2)]:
                     
                     if j in np.arange(L * L - L, L * L):
                         
@@ -306,7 +305,7 @@ class Atrium():
                                        self.neighbours[2][x],
                                        self.neighbours[3][x]])
     
-            else: # if self.hexagonal == True
+            if self.hexagonal == True:
                 
                 neighbours = np.array([self.neighbours[0][x],
                                        self.neighbours[1][x],
@@ -340,62 +339,33 @@ class Atrium():
 
     def TimeInAF(self):
         self.excitations[self.states[0]] += 1
+        #if self.t in [396,397,398,399,400,401]:
+        #    print(self.t)
+        #    print(self.phases[23280])
+        #    print(self.resting[23280])
         pacemaker_mode = int(np.average(self.excitations[self.first_col]) + 0.5)
-        
+       #print(pacemaker_mode)
+       # print(self.excitations[9004])
         if self.AF == False:
 
-            possible_AF_locs = self.index[self.excitations > pacemaker_mode]
+            possible_AF_locs = np.where(self.excitations > pacemaker_mode)[0]
         
             neighbours_list = [[y for y in self.neighbour_list[i] if self.tbe[int(y)] == True] for i in possible_AF_locs]
             tbe_neighbours = np.array(list(map(len,neighbours_list)))
-            a = np.where(tbe_neighbours > 1)[0]
-            
-            if len(a) > 0:
+   
+            if len(np.where(tbe_neighbours > 1)[0]) > 0:
   
                 self.AF = True
-                print(self.AF)
-                print(self.t)
-                self.sources.extend(possible_AF_locs[a])
+                self.sources.extend(possible_AF_locs[np.where(tbe_neighbours)])
+                #print(self.sources)
 
-        else:
-            print(self.excitations[np.array(self.sources)])
-            if max(self.excitations[np.array(self.sources)]) <= pacemaker_mode:
-                print(pacemaker_mode)
-                print(self.excitations[np.array(self.sources)])
+                #print(self.t)
                 
-                if self.t_SR < 5:
-                     
-                    self.t_AF += 1
-                     
-                    possible_AF_locs = self.index[self.excitations > pacemaker_mode]
-            
-                    neighbours_list = [[y for y in self.neighbour_list[i] if self.tbe[int(y)] == True] for i in possible_AF_locs]
-                    tbe_neighbours = np.array(list(map(len,neighbours_list)))
-                     
-                    a = np.where(tbe_neighbours > 1)[0]
-                     
-                    if len(a) > 0:
-                        self.sources.extend(possible_AF_locs[a])
-                     
-                    else:
-                        self.t_SR += 1
-                else:
-                    self.AF = False
-                    self.sources = []
-                    print(self.AF)
-                    print(self.t)
-                    self.tot_AF += self.t_AF
-                    self.t_SR = 0
-                 
-            else: 
-                if self.t_SR == 0:
-                    self.t_AF += 1
-                    
-                else:
-                    print('here')
-                    self.t_AF += 1
-                    self.t_SR = 0
-
+        if self.AF == True:
+            if max(self.excitations[np.array(self.sources)]) <= pacemaker_mode:
+                self.AF = False
+                #print(self.AF)
+                #print(self.t)
         
     def CMP2D_timestep(self):
 
@@ -424,7 +394,5 @@ class Atrium():
         while self.t < self.tot_time:
             
             self.CMP2D_timestep()
-            self.tot_AF += self.t_AF
            
 #A = Atrium()
-#A.CMP2D()
