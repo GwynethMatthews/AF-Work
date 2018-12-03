@@ -8,7 +8,7 @@ import Atrium as AC
                  ,pace_rate = 220,seed1 = 1,seed2=2,seed3=3"""
    
 from line_profiler import LineProfiler            
-A= AC.Atrium(tot_time = 10**4)        
+A= AC.Atrium(v_tran_1 = 0.145, tot_time = 10**4, s2 = 49)        
 lp = LineProfiler()
 lp_wrapper = lp(A.CMP2D)
 lp.add_function(A.CMP2D_timestep)

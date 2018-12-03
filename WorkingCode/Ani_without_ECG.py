@@ -16,11 +16,11 @@ from matplotlib import collections
 #               e = 0.05, s1 = 152, s2 = 32522, s3 = 335298, s4 = 74)
 #Paroxysmal AF
 A = AC.Atrium(hexagonal = False, model = 1, L = 200, v_para = 1,
-                 v_tran_1 = 0.14, v_tran_2 = 0.6, d = 0.05, threshold_cells = 1,
-                 threshold = 0.25, e = 0.05, rp = 50, tot_time = 10**6, 
-                 pace_rate = 220, s1 = 100, s2 = 475760, s3 = 3306, s4 = 476)
+                 v_tran_1 = 0.09, v_tran_2 = 0.5, d = 0.05, threshold_cells = 1,
+                 threshold = 0.3, e = 0.05, rp = 50, tot_time = 10**6, 
+                 pace_rate = 220, s1 = 100, s2 = 4760, s3 = 3306, s4 = 476)
 
-##############################################################################
+###############################################################################
 #A.CMP2D()
 # Animation function
 
@@ -40,7 +40,8 @@ def update1(frame_number, mat,A):
     #    print(A.resting[23280])
         #if 23280 in A.states[0]:
          #   print('fuck')
-    A.phases[8400] = 30
+    A.phases[25729] = 30
+    A.phases[38115] = 30
     data = A.phases.reshape([A.L, A.L])
     mat.set_data(data)
     
@@ -51,13 +52,13 @@ def update2(frame_number,collection,A):
     A.CMP2D_timestep_ani()
     
     # WITH CONVOLUTION
-    convolution = gaussian_filter(A.phases.reshape([A.L, A.L]), sigma=0.5,
-                                  mode = ('wrap', 'constant'),cval = A.rp + 1)
-    data = np.ravel(convolution)
-    collection.set_array(data)
+    #convolution = gaussian_filter(A.phases.reshape([A.L, A.L]), sigma=0.5,
+    #                              mode = ('wrap', 'constant'),cval = A.rp + 1)
+    #data = np.ravel(convolution)
+    #collection.set_array(data)
     
     # WITHOUT CONVOLUTION
-    #collection.set_array(np.array(A.phases))
+    collection.set_array(np.array(A.phases))
     
     return ax,
 
