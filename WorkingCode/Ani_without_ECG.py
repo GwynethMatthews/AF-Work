@@ -6,12 +6,12 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import matplotlib.patches as mpat
 from matplotlib import collections
-plt.rcParams['animation.ffmpeg_path']
+
 ###############################################################################
 # Initiating the Atrium
 
-A = AC.Atrium(hexagonal = True, model = 3, L = 200, v_para = 0.72,
-                 v_tran_1 = 0.72, v_tran_2 = 0.72, d = 0.05, threshold_cells = 1,
+A = AC.Atrium(hexagonal = True, model = 2, L = 200, v_para = 0.36,
+                 v_tran_1 = 0.36, v_tran_2 = 0.36, d = 0.05, threshold_cells = 1,
                  threshold = 0.3, p = 0.5, e = 0.05, rp = 50, tot_time = 10**6, 
                  pace_rate = 220, s1 = 147874, s2 = 478766760, s3 = 3763206, s4 = 4738576)
 
@@ -102,6 +102,3 @@ if A.hexagonal == True:
                                    ,fargs = (collection,A), interval=100, repeat = None)
     plt.axis([-1, A.L + 1, -1, A.L + 1])
 
-#writer = animation.FFMpegWriter()
-
-#ani.save('basic_animation.mp4', writer = writer)

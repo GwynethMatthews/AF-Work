@@ -37,7 +37,7 @@ class Atrium():
             self.dysfunctional_cells = np.full([L*L],fill_value = False, dtype = bool) 
             
         
-        if self.model == 3:
+        if self.model == 2:
             self.threshold = threshold
             self.p = p
             
