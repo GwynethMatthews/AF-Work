@@ -1,17 +1,16 @@
 import numpy as np
-import scipy.stats as stats
+#import scipy.stats as stats
 """ Standard Conduction Model"""
 
 
 class Atrium():
     """Creates the myocardium's structure.
     Model 1 = standard CMP model, 
-    Model 2 = source model,
-    Model 3 = source-sink model
+    Model 2 = source-sink model
     """
     def __init__(self, hexagonal = False, model = 1, L = 200, v_para = 1,
                  v_tran_1 = 0.1, v_tran_2 = 0.6, d = 0.05, threshold_cells = 1,
-                 threshold = 0.25, e = 0.05, rp = 50, tot_time = 10**6, 
+                 threshold = 0.25, p = 0.2, e = 0.05, rp = 50, tot_time = 10**6, 
                  pace_rate = 220, s1 = 1, s2 = 2, s3 = 3, s4 = 4):
         
         # System Parameters
@@ -37,12 +36,10 @@ class Atrium():
             self.nonfire_prob = e
             self.dysfunctional_cells = np.full([L*L],fill_value = False, dtype = bool) 
             
-        if self.model == 2:
-            self.nonfire_prob = e
-            self.thresh_cells = threshold_cells
         
         if self.model == 3:
             self.threshold = threshold
+            self.p = p
             
         
         # System cell positions
@@ -236,20 +233,18 @@ class Atrium():
                                       [self.dysfunctional_cells[self.first_col]])
         
         
-    def SinusRhythm(self):
+    def SinusRhythm1(self):
         
-        if self.model == 1:
-        
-            e_comp_val1 = np.random.rand(len(self.first_dys))
-            dysfunctional_cells = self.first_dys[e_comp_val1 > self.nonfire_prob]
-    
-            self.tbe[dysfunctional_cells] = True
-            self.tbe[self.first_fun] = True
+        e_comp_val1 = np.random.rand(len(self.first_dys))
+        dysfunctional_cells = self.first_dys[e_comp_val1 > self.nonfire_prob]
+
+        self.tbe[dysfunctional_cells] = True
+        self.tbe[self.first_fun] = True
             
-        else:
+    def SinusRhythm2(self):
+        
             self.tbe[self.first_col] = True
-        
-        
+           
     def Relaxing(self):
 
         self.resting[self.tbe] = False
@@ -263,86 +258,84 @@ class Atrium():
         self.phases[self.tbe] = 0
         self.phases[~self.resting] += 1
         
-        self.V[self.tbe] = 20.
-        self.V[~self.resting] -= 2.2
+        # Needed for ECG
+#        self.V[self.tbe] = 20.
+#        self.V[~self.resting] -= 2.2
         
         self.resting[self.tbe] = False
         self.resting[self.states[-1]] = True
         
         del self.states[-1]
         self.states.insert(0, self.index[self.tbe])   
-        
-    def Conduct(self):
+
+
+    def Conduct1(self):
         
         x = self.states[0]
         
-        if self.model == 3:
+        if self.hexagonal == False:
             
-            neighbours_list = [[y for y in self.neighbour_list[i] if self.resting[int(y)] == True] for i in x]
+            neighbours = np.array([self.neighbours[0][x],
+                                   self.neighbours[1][x],
+                                   self.neighbours[2][x],
+                                   self.neighbours[3][x]])
 
-            resting_neighbours = list(map(len,neighbours_list))
-            inward_current = np.zeros(self.L * self.L)
+        else: # if self.hexagonal == True
             
-            for i in range(len(neighbours_list)):
-                
-                if resting_neighbours[i] != 0:
-                    inward_current[np.array(neighbours_list[i],dtype = int)] += float(1) / np.array(resting_neighbours[i])
-            #print(inward_current)
-            receive_current = self.index[inward_current > 0]
-            get_excited = receive_current[inward_current[receive_current] > self.threshold]
-            #possible_excited = receive_current[inward_current[receive_current] < self.threshold]
-            #possible_excited = inward_current
+            neighbours = np.array([self.neighbours[0][x],
+                                   self.neighbours[1][x],
+                                   self.neighbours[2][x],
+                                   self.neighbours[3][x],
+                                   self.neighbours[4][x],
+                                   self.neighbours[5][x]])
+
             
-            #possible_excited = self.index[inward_current[np.where(inward_current[possible_excited] < self.threshold)[0]]]
-            #get_excited = np.where(inward_current >= self.threshold)[0]
-            #np.where(inward_current < self.threshold and inward_current > 0)[0]
-            #e_comp_val3 = np.random.rand(len(possible_excited))
-            #possible_excited = possible_excited[e_comp_val3 <= 0.4]
-            #threshold = np.random.rand(self.L * self.L)* (0.5) 
-            #get_excited = self.index[inward_current >= threshold]
-            #self.tbe[possible_excited] = True
-            self.tbe[get_excited] = True
+        neighbours = np.array(neighbours[~np.isnan(neighbours)], dtype = int) 
+        neighbours = neighbours[self.resting[neighbours]]        
         
-        else:
-            
-            if self.hexagonal == False:
-                
-                neighbours = np.array([self.neighbours[0][x],
-                                       self.neighbours[1][x],
-                                       self.neighbours[2][x],
-                                       self.neighbours[3][x]])
-    
-            else: # if self.hexagonal == True
-                
-                neighbours = np.array([self.neighbours[0][x],
-                                       self.neighbours[1][x],
-                                       self.neighbours[2][x],
-                                       self.neighbours[3][x],
-                                       self.neighbours[4][x],
-                                       self.neighbours[5][x]])
+        
+        neighbours_fun = neighbours[self.dysfunctional_cells[neighbours]]
+        neighbours_dys = neighbours[~self.dysfunctional_cells[neighbours]]
+        
+        e_comp_val2 = np.random.rand(len(neighbours_dys))
+        neighbours_dys = neighbours_dys[e_comp_val2 > self.nonfire_prob]
 
-            
-            neighbours = np.array(neighbours[~np.isnan(neighbours)], dtype = int) 
-            neighbours = neighbours[self.resting[neighbours]]
-            
-            if self.model == 1:
-                
-                neighbours_fun = neighbours[self.dysfunctional_cells[neighbours]]
-                neighbours_dys = neighbours[~self.dysfunctional_cells[neighbours]]
-            
-            if self.model == 2:
-                
-                excitees, counts = np.unique(neighbours,return_counts = True)
-                neighbours_fun = excitees[counts >= self.thresh_cells]
-                neighbours_dys = excitees[counts < self.thresh_cells]
-                
-            e_comp_val2 = np.random.rand(len(neighbours_dys))
-            neighbours_dys = neighbours_dys[e_comp_val2 > self.nonfire_prob]
-    
-            self.tbe[neighbours_fun] = True
-            self.tbe[neighbours_dys] = True
+        self.tbe[neighbours_fun] = True
+        self.tbe[neighbours_dys] = True
         
         self.tbe[x] = False
+        
+   
+    
+    def Conduct2(self):
+        
+        x = self.states[0]
+            
+        neighbours_list = [[y for y in self.neighbour_list[i] if self.resting[int(y)] == True] for i in x]
+
+        resting_neighbours = list(map(len,neighbours_list))
+        inward_current = np.zeros(self.L * self.L)
+        
+        for i in range(len(neighbours_list)):
+            
+            if resting_neighbours[i] != 0:
+                inward_current[np.array(neighbours_list[i],dtype = int)] += float(1) / np.array(resting_neighbours[i])
+        
+        receive_current = self.index[inward_current > 0]
+        
+        get_excited = receive_current[inward_current[receive_current] >= self.threshold]
+        
+        possible_excited = receive_current[inward_current[receive_current] < self.threshold]
+        e_comp_val3 = np.random.rand(len(possible_excited))
+        possible_excited = possible_excited[e_comp_val3 <= self.p]
+
+        self.tbe[possible_excited] = True
+        self.tbe[get_excited] = True
+        
+        self.tbe[x] = False
+        
+    
+
 
 #    def TimeInAF(self):
 #        x = self.states[0]
@@ -416,49 +409,64 @@ class Atrium():
 ##                self.t_SR = 0
 
         
-    def CMP2D_timestep(self):
+    def CMP2D_timestep1(self):
 
         if np.remainder(self.t, self.pace_rate) == 0:
-            self.SinusRhythm()
+            self.SinusRhythm1()
             
         self.Relaxing()
-        self.Conduct()
+        self.Conduct1()
         #self.TimeInAF()
         self.t += 1
         
-    def CMP2D_timestep_ani(self):
+    def CMP2D_timestep2(self):
 
         if np.remainder(self.t, self.pace_rate) == 0:
-            self.SinusRhythm()
+            self.SinusRhythm2()
+            
+        self.Relaxing()
+        self.Conduct2()
+        #self.TimeInAF()
+        self.t += 1
+        
+    def CMP2D_timestep_ani1(self):
+
+        if np.remainder(self.t, self.pace_rate) == 0:
+            self.SinusRhythm1()
             
         self.Relaxing_ani()
-        self.Conduct()
+        self.Conduct1()
+
         #self.TimeInAF()
         self.t += 1
             
+        
+    def CMP2D_timestep_ani2(self):
+
+        if np.remainder(self.t, self.pace_rate) == 0:
+            self.SinusRhythm2()
+            
+        self.Relaxing_ani()
+        self.Conduct2()
+
+        #self.TimeInAF()
+        self.t += 1
+        
     def CMP2D(self):
 
         np.random.seed(self.seed_prop)
+       
+        if self.model == 1:
+            CMP2D_timestep = self.CMP2D_timestep1()
+        else:
+            CMP2D_timestep = self.CMP2D_timestep2()
         
         while self.t < self.tot_time:
             
-            self.CMP2D_timestep()
+            CMP2D_timestep
+            
         self.tot_AF += self.t_AF
         
-    def CMP2D_timestep_perc(Atrium):
-        """A single timestep"""
-        Atrium.SinusRhythm()
-        Atrium.Relaxing()
-        Atrium.Conduct()
-        while len(Atrium.states[0]) != 0:
-            Atrium.Relaxing()
-            Atrium.Conduct()
-            Atrium.t += 1
-            for i in Atrium.states[0]:
-                if i % Atrium.L == Atrium.L - 1:
-                    return 1
-    
-        return 0
-           
+
 #A = Atrium()
 #A.CMP2D()
