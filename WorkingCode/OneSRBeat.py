@@ -264,9 +264,9 @@ def OnePacemakerBeat(parameters, seeds, itr):
     
     
 parameters = []
-for i in np.linspace(0, 1, 5, endpoint = True): # nu values
+for i in np.linspace(0, 1, 100, endpoint = True): # nu values
     for j in np.array([0.25,0.3,0.4,0.45,0.5,0.75]): # threshold values
-        for k in np.linspace(0, 1, 5, endpoint = True): # p values
+        for k in np.linspace(0, 1, 100, endpoint = True): # p values
             parameters.extend([[i,j,k]])
-parameters = np.array(parameters).reshape((3,50,3))
-s = np.random.randint(0,2**63,(3,5,3))
+parameters = np.array(parameters).reshape((1000,60,3))
+s = np.random.randint(0,2**31,(1000,60,3))
