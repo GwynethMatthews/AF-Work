@@ -5,14 +5,6 @@ import numpy as np
 
 class Atrium():
     """Creates the myocardium's structure.
-<<<<<<< HEAD
-    Model 1 = standard CMP model, 
-    Model 2 = source-sink model
-    """
-    def __init__(self, hexagonal = False, model = 1, L = 200, v_para = 1,
-                 v_tran_1 = 0.1, v_tran_2 = 0.6, d = 0.05, threshold_cells = 1,
-                 threshold = 0.25, p = 0.2, e = 0.05, rp = 50, tot_time = 10**6, 
-=======
     hexagonal: False = Square Lattice, True = Hexagonal Lattice
     model: 1 = standard CMP model, 2 = source-sink model
     L: Lattice length
@@ -34,7 +26,6 @@ class Atrium():
     def __init__(self, hexagonal = False, model = 1, L = 200, v_para = 1,
                  v_tran_1 = 0.1, v_tran_2 = 0.6, d = 0.05, e = 0.05, 
                  threshold = 0.25, p = 0.05, rp = 50, tot_time = 10**6,
->>>>>>> Excitation time AF definition
                  pace_rate = 220, s1 = 1, s2 = 2, s3 = 3, s4 = 4):
         
         # System Parameters
@@ -81,13 +72,8 @@ class Atrium():
         self.seed_prop = s4
 
         # Measurable Variables
-<<<<<<< HEAD
-        self.pacemaker_mode = 0
-        self.excitations = np.zeros(L*L, dtype = int)
-=======
         self.excitation_rate = np.zeros(L*L, dtype = int)
         self.last_excitation = np.zeros(L*L, dtype = int)
->>>>>>> Excitation time AF definition
         self.AF = False
         self.sources  = []
         self.t = 0
@@ -354,19 +340,11 @@ class Atrium():
         
         get_excited = receive_current[inward_current[receive_current] >= self.threshold]
         
-<<<<<<< HEAD
         possible_excited = receive_current[inward_current[receive_current] < self.threshold]
         e_comp_val3 = np.random.rand(len(possible_excited))
         possible_excited = possible_excited[e_comp_val3 <= self.p]
 
         self.tbe[possible_excited] = True
-=======
-        possible_excited1 = receive_current[inward_current[receive_current] < self.threshold]
-        e_comp_val3 = np.random.rand(len(possible_excited1))
-        possible_excited1 = possible_excited1[e_comp_val3 <= self.p]
-
-        self.tbe[possible_excited1] = True
->>>>>>> Excitation time AF definition
         self.tbe[get_excited] = True
         
         self.tbe[x] = False
@@ -374,78 +352,6 @@ class Atrium():
     
 
 
-<<<<<<< HEAD
-#    def TimeInAF(self):
-#        x = self.states[0]
-#        
-#        not_first_col = self.not_first_col
-#        self.excitations[x] += 1
-#        
-#        if self.t in self.pace:
-#            self.pacemaker_mode = int(np.average(self.excitations[self.first_col]) + 0.5)
-#        
-#        excitations = self.excitations
-#        pacemaker_mode = self.pacemaker_mode
-#        
-#        if self.AF == False:
-#    
-#            possible_AF_locs = not_first_col[excitations[not_first_col] > pacemaker_mode]
-#        
-#            neighbours_list = [[y for y in self.neighbour_list[i] if self.tbe[int(y)] == True] for i in possible_AF_locs]
-#            tbe_neighbours = np.array(list(map(len,neighbours_list)))
-#            
-#            a = np.where(tbe_neighbours > 1)[0]
-#            
-#            if len(a) > 0:
-#      
-#                self.AF = True
-#                print(self.AF)
-#                print(self.t)
-#                self.sources.extend(possible_AF_locs[a])
-#                #print(self.sources)
-#    
-##        else:
-#            #if len(self.sources) > 0:    
-##            if np.amax(excitations[np.array(self.sources)]) <= pacemaker_mode:
-##                if self.t_SR
-##                    self.AF = False
-##                    print(self.AF)
-##                    print(self.t)
-##            else:
-##                self.t_AF += 1
-##                #self.AF = True
-##                #print(self.AF)
-##                
-##                if self.t_SR < self.pace_rate:
-##                     
-##                    self.t_AF += 1
-##                     
-##                    possible_AF_locs = not_first_col[excitations[not_first_col] > pacemaker_mode]
-##            
-##                    neighbours_list = [[y for y in self.neighbour_list[i] if self.tbe[int(y)] == True] for i in possible_AF_locs]
-##                    tbe_neighbours = np.array(list(map(len,neighbours_list)))
-##                     
-##                    a = np.where(tbe_neighbours > 1)[0]
-##                     
-##                    if len(a) > 0:
-##                        self.sources.extend(possible_AF_locs[a])
-##                        self.t_SR = 0
-##                     
-##                    else:
-##                        self.t_SR += 1
-##                else:
-##                    self.AF = False
-##                    #self.sources = []
-##                    print(self.AF)
-##
-##                    self.tot_AF += self.t_AF
-##                    self.t_SR = 0
-##                 
-##            else: 
-##   
-##                self.t_AF += 1
-##                self.t_SR = 0
-=======
     def TimeInAF(self):
 
         #not_first_col = self.not_first_col
@@ -468,7 +374,6 @@ class Atrium():
                 else:
                     self.AF = False
                     #print(self.AF)
->>>>>>> Excitation time AF definition
 
         
     def CMP2D_timestep1(self):
@@ -488,11 +393,7 @@ class Atrium():
             
         self.Relaxing()
         self.Conduct2()
-<<<<<<< HEAD
-        #self.TimeInAF()
-=======
         self.TimeInAF()
->>>>>>> Excitation time AF definition
         self.t += 1
         
     def CMP2D_timestep_ani1(self):
@@ -515,27 +416,12 @@ class Atrium():
         self.Relaxing_ani()
         self.Conduct2()
 
-<<<<<<< HEAD
-        #self.TimeInAF()
-=======
         self.TimeInAF()
->>>>>>> Excitation time AF definition
         self.t += 1
         
     def CMP2D(self):
 
         np.random.seed(self.seed_prop)
-<<<<<<< HEAD
-       
-        if self.model == 1:
-            CMP2D_timestep = self.CMP2D_timestep1()
-        else:
-            CMP2D_timestep = self.CMP2D_timestep2()
-        
-        while self.t < self.tot_time:
-            
-            CMP2D_timestep
-=======
         
         while self.t < self.tot_time:
             if self.model == 1:
@@ -545,15 +431,9 @@ class Atrium():
         
         
             
->>>>>>> Excitation time AF definition
             
         self.tot_AF += self.t_AF
         
 
-<<<<<<< HEAD
-#A = Atrium()
-#A.CMP2D()
-=======
 A = Atrium(tot_time = 10)
 A.CMP2D()
->>>>>>> Excitation time AF definition
