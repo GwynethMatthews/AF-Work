@@ -437,5 +437,8 @@ class Atrium():
        
                 
 
-#A = Atrium(tot_time = 10)
-#A.CMP2D()
+A = Atrium(hexagonal = True,model =2, L = 200, v_para = 0.5,
+                     v_tran_1 = 0.5, v_tran_2 = 0.5,
+                     threshold = 0.5, p = 0.25, rp = 50, tot_time = 10**6,
+                     pace_rate = 220, s2 = 10, s3 = 40, s4 = 30)
+A.CMP2D()

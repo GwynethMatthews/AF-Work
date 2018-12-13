@@ -212,18 +212,16 @@ class Atrium():
 
 
 # parameters array of [v,t,p] of length 60, i th ejob variable
-def OnePacemakerBeat(parameters, itr):
+def OnePacemakerBeat(parameters, seeds, itr):
     data_full = []
+    
     for l in range(len(parameters[itr])):
         
-#        A = Atrium(hexagonal = True, L = 200, v_para = parameters[itr][l][0],
-#                     v_tran_1 = parameters[itr][l][0], v_tran_2 = parameters[itr][l][0],
-#                     threshold = parameters[itr][l][1], p = parameters[itr][l][2], rp = 50, tot_time = 10**6,
-#                     pace_rate = 220, s1 = 10, s2 = 40, s3 = 30)
-        A = Atrium(hexagonal = True, L = 200, v_para = 0.5,
-                     v_tran_1 = 0.5, v_tran_2 = 0.5,
-                     threshold = 0.5, p = 0.25, rp = 50, tot_time = 10**6,
-                     pace_rate = 220, s1 = 10, s2 = 40, s3 = 30)
+        A = Atrium(hexagonal = True, L = 200, v_para = parameters[itr][l][0],
+                     v_tran_1 = parameters[itr][l][0], v_tran_2 = parameters[itr][l][0],
+                     threshold = parameters[itr][l][1], p = parameters[itr][l][2], rp = 50, tot_time = 10**6,
+                     pace_rate = 220, s1 = seeds[itr][l][0], s2 = seeds[itr][l][1], s3 = seeds[itr][l][2])
+
         A.SinusRhythm()
         A.Relaxing()
         A.Conduct()
@@ -271,4 +269,4 @@ for i in np.linspace(0, 1, 5, endpoint = True): # nu values
         for k in np.linspace(0, 1, 5, endpoint = True): # p values
             parameters.extend([[i,j,k]])
 parameters = np.array(parameters).reshape((3,50,3))
-
+s = np.random.randint(0,2**63,(3,5,3))
