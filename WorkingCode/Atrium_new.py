@@ -73,7 +73,7 @@ class Atrium():
 
         # Measurable Variables
         self.excitation_rate = np.zeros(L*L, dtype = int)
-        self.last_excitation = np.zeros(L*L, dtype = int)
+        self.last_excitation = np.full((L*L), fill_value = -self.pace_rate)
         self.AF = False
         self.sources  = []
         self.t = 0
@@ -364,16 +364,17 @@ class Atrium():
         
             a = np.mean(self.excitation_rate[x])
 
-            if self.t > self.pace_rate:
-                if a < self.pace_rate * 0.9:
-                    self.AF = True
-                    self.t_AF += 1
-                    print(self.AF)
-                    print(self.t)
-                
-                else:
-                    self.AF = False
-                    #print(self.AF)
+            #if self.t > self.pace_rate:
+            if a < self.pace_rate * 0.9 or a > self.pace_rate * 1.5:
+                self.AF = True
+                self.t_AF += 1
+                print(self.AF)
+                print(self.t)
+            
+            else:
+                self.AF = False
+                #print(self.AF)
+            
 
         
     def CMP2D_timestep1(self):
@@ -433,7 +434,8 @@ class Atrium():
             
             
         self.tot_AF += self.t_AF
-        
+       
+                
 
-A = Atrium(tot_time = 10)
-A.CMP2D()
+#A = Atrium(tot_time = 10)
+#A.CMP2D()

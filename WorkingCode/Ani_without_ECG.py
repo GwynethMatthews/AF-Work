@@ -10,11 +10,14 @@ plt.rcParams['animation.ffmpeg_path']
 ###############################################################################
 # Initiating the Atrium
 convolve = True
-A = AC.Atrium(hexagonal = True, model = 2, L = 100, v_para = 0.49,
-                 v_tran_1 = 0.49, v_tran_2 = 0.49, d = 0.05,
-                 threshold = 0.5, p = 0.75, e = 0.05, rp = 30, tot_time = 10000, 
-                 pace_rate = 220, s1 = 100, s2 = 4760, s3 = 3306, s4 = 476)
-
+#A = AC.Atrium(hexagonal = True, model = 2, L = 100, v_para = 0.49,
+#                 v_tran_1 = 0.49, v_tran_2 = 0.49, d = 0.05,
+#                 threshold = 0.5, p = 0.75, e = 0.05, rp = 30, tot_time = 10000, 
+#                 pace_rate = 220, s1 = 100, s2 = 4760, s3 = 3306, s4 = 476)
+A = AC.Atrium(hexagonal = True,model =2, L = 200, v_para = 0.5,
+                     v_tran_1 = 0.5, v_tran_2 = 0.5,
+                     threshold = 0.5, p = 0.25, rp = 50, tot_time = 10**6,
+                     pace_rate = 220, s2 = 10, s3 = 40, s4 = 30)
 ###############################################################################
 # Animation function
 
@@ -117,6 +120,5 @@ if A.hexagonal == True:
                                    interval= 5, repeat = None)
     plt.axis([-1, A.L + 1, -1, A.L + 1])
 
-#writer = animation.FFMpegWriter(fps = 10)
 
 #ani.save('v_0.60_thresh_1_p_0.75_1_2_4_4.mp4', fps = 10, dpi = 250, bitrate = 5000)
