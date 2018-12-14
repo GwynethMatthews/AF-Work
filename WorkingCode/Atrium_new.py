@@ -209,20 +209,27 @@ class Atrium():
                 else:
                 #if j in self.position[np.arange(1, L, 2)]:
                     
-                    if j in np.arange(self.L * self.L - self.L, self.L * self.L):
+                    if j in np.arange(self.L * self.L - self.L, self.L * self.L): ### last row
                         
                         if num_rand_tran1[j] <= self.transverse_prob_l:
                             self.neighbours[4][j] = j - ((self.L * self.L) - self.L)
                             self.neighbours[1][j - ((self.L * self.L) - self.L)] = j
-
+    
                     else:
                         
                         if num_rand_tran1[j] <= self.transverse_prob_l:
                             self.neighbours[4][j] = j+L
                             self.neighbours[1][j + self.L] = j
                             
-                        if num_rand_tran2 [j] <= self.transverse_prob_r:
-                            if j not in self.last_col:
+                    if num_rand_tran2 [j] <= self.transverse_prob_r:
+                        
+                        if j not in self.last_col:
+                            
+                            if j in np.arange(self.L * self.L - self.L, self.L * self.L):
+                                self.neighbours[3][j] = j - ((self.L*self.L) - self.L) + 1
+                                self.neighbours[0][j - ((self.L*self.L) - self.L) + 1] = j
+                                
+                            else:    
                                 self.neighbours[3][j] = j + self.L + 1
                                 self.neighbours[0][j + self.L + 1] = j
                                 
@@ -441,4 +448,4 @@ A = Atrium(hexagonal = True,model =2, L = 200, v_para = 0.5,
                      v_tran_1 = 0.5, v_tran_2 = 0.5,
                      threshold = 0.5, p = 0.25, rp = 50, tot_time = 10**6,
                      pace_rate = 220, s2 = 10, s3 = 40, s4 = 30)
-A.CMP2D()
+#A.CMP2D()
