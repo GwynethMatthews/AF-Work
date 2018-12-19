@@ -24,7 +24,7 @@ class Atrium():
     s4: seed for cell firing selection (e or p)
     """
     def __init__(self, hexagonal = False, model = 1, L = 200, v_para = 1,
-                 v_tran_1 = 0.1, v_tran_2 = 0.6, d = 0.05, e = 0.05, 
+                 v_tran_1 = 1, v_tran_2 = 0.6, d = 0.05, e = 0.05, 
                  threshold = 0.25, p = 0.05, rp = 50, tot_time = 10**6,
                  pace_rate = 220, s1 = 1, s2 = 2, s3 = 3, s4 = 4):
         
@@ -242,9 +242,9 @@ class Atrium():
                  self.neighbours[5][i]] for i in self.index]  
         
             
-        self.neighbour_list = np.array([[x for x in 
+        self.neighbour_list = np.array([np.array([x for x in 
                                  self.list_of_neighbours[i] if str(x) 
-                                 != 'nan'] for i in self.index])
+                                 != 'nan'],dtype = int) for i in self.index])
                     
         
         if self.model == 1:
@@ -295,26 +295,10 @@ class Atrium():
         
         x = self.states[0]
         
-        if self.hexagonal == False:
-            
-            neighbours = np.array([self.neighbours[0][x],
-                                   self.neighbours[1][x],
-                                   self.neighbours[2][x],
-                                   self.neighbours[3][x]])
-
-        else: # if self.hexagonal == True
-            
-            neighbours = np.array([self.neighbours[0][x],
-                                   self.neighbours[1][x],
-                                   self.neighbours[2][x],
-                                   self.neighbours[3][x],
-                                   self.neighbours[4][x],
-                                   self.neighbours[5][x]])
-
+        neighbours = np.array([self.neighbours[:,x]])
             
         neighbours = np.array(neighbours[~np.isnan(neighbours)], dtype = int) 
         neighbours = neighbours[self.resting[neighbours]]        
-        
         
         neighbours_fun = neighbours[self.dysfunctional_cells[neighbours]]
         neighbours_dys = neighbours[~self.dysfunctional_cells[neighbours]]
@@ -333,21 +317,21 @@ class Atrium():
         
         x = self.states[0]
             
-        neighbours_list = [[y for y in self.neighbour_list[i] if self.resting[int(y)] == True] for i in x]
+        neighbours_list = [i[self.resting[i]] for i in self.neighbour_list[x]]
 
-        resting_neighbours = list(map(len,neighbours_list))
         inward_current = np.zeros(self.L * self.L)
         
         for i in range(len(neighbours_list)):
             
-            if resting_neighbours[i] != 0:
-                inward_current[np.array(neighbours_list[i],dtype = int)] += float(1) / np.array(resting_neighbours[i])
+            if len(neighbours_list[i]) != 0:
+                inward_current[neighbours_list[i]] += 1 / float(len(neighbours_list[i]))
         
         receive_current = self.index[inward_current > 0]
-        
+       
         get_excited = receive_current[inward_current[receive_current] >= self.threshold]
         
         possible_excited = receive_current[inward_current[receive_current] < self.threshold]
+        
         e_comp_val3 = np.random.rand(len(possible_excited))
         possible_excited = possible_excited[e_comp_val3 <= self.p]
 
@@ -361,26 +345,20 @@ class Atrium():
 
     def TimeInAF(self):
 
-        #not_first_col = self.not_first_col
-        if len(self.states[0]) > 0: 
+        x = self.states[0]
+        if len(x) > 0: 
             
-            x = self.states[0]
-            
-            self.excitation_rate[x] = np.abs(self.last_excitation[x] - self.t)
+            self.excitation_rate[x] = self.t - self.last_excitation[x]
             self.last_excitation[x] = self.t
         
-            a = np.mean(self.excitation_rate[x])
-
-            #if self.t > self.pace_rate:
-            if a < self.pace_rate * 0.9 or a > self.pace_rate * 1.5:
+            a = sum(self.excitation_rate[x])/len(self.excitation_rate[x])
+            
+            if a < self.pace_rate * 0.9:
                 self.AF = True
                 self.t_AF += 1
-                print(self.AF)
-                print(self.t)
             
             else:
                 self.AF = False
-                #print(self.AF)
             
 
         
@@ -391,7 +369,7 @@ class Atrium():
             
         self.Relaxing()
         self.Conduct1()
-        #self.TimeInAF()
+        self.TimeInAF()
         self.t += 1
         
     def CMP2D_timestep2(self):
@@ -403,7 +381,7 @@ class Atrium():
         self.Conduct2()
         self.TimeInAF()
         self.t += 1
-        
+    
     def CMP2D_timestep_ani1(self):
 
         if np.remainder(self.t, self.pace_rate) == 0:
@@ -412,7 +390,7 @@ class Atrium():
         self.Relaxing_ani()
         self.Conduct1()
 
-        #self.TimeInAF()
+        self.TimeInAF()
         self.t += 1
             
         
@@ -444,8 +422,8 @@ class Atrium():
        
                 
 
-A = Atrium(hexagonal = True,model =2, L = 200, v_para = 0.5,
-                     v_tran_1 = 0.5, v_tran_2 = 0.5,
-                     threshold = 0.5, p = 0.25, rp = 50, tot_time = 10**6,
-                     pace_rate = 220, s2 = 10, s3 = 40, s4 = 30)
+#A = Atrium(hexagonal = True,model =2, L = 200, v_para = 0.5,
+#                     v_tran_1 = 0.5, v_tran_2 = 0.5,
+#                     threshold = 0.5, p = 0.25, rp = 50, tot_time = 10**6,
+#                     pace_rate = 220, s2 = 10, s3 = 40, s4 = 30)
 #A.CMP2D()

@@ -24,6 +24,7 @@ class Atrium():
                  pace_rate = 220, s1 = 1, s2 = 2, s3 = 3):
         
         # System Parameters
+        self.connections_full = []
         self.hexagonal = hexagonal
         self.L = L
         
@@ -176,10 +177,11 @@ class Atrium():
         neighbours_list = [[y for y in self.neighbour_list[i] if self.resting[int(y)] == True] for i in x]
 
         resting_neighbours = list(map(len,neighbours_list))
-        print(resting_neighbours)
+        #print(resting_neighbours)
         inward_current = np.zeros(self.L * self.L)
         number_of_excited_cells_connected = np.zeros(self.L * self.L)
-        connections = np.empty(sum(resting_neighbours),dtype = tuple)
+        single_connections = np.empty(sum(resting_neighbours),dtype = tuple)
+        
         
         for i in range(len(neighbours_list)):
             
@@ -187,17 +189,24 @@ class Atrium():
                 inward_current[np.array(neighbours_list[i],dtype = int)] += float(1) / resting_neighbours[i]
                 number_of_excited_cells_connected[np.array(neighbours_list[i],dtype = int)] += 1
         
+        complete_connections = [[]] * len(inward_current)
         k = int(0) 
         for i in range(len(neighbours_list)):
             for j in neighbours_list[i]:
-                
-                connections[k] = (resting_neighbours[int(i)],int(number_of_excited_cells_connected[int(j)]))
+                #print(j)
+                complete_connections[int(j)] = np.append(complete_connections[int(j)],resting_neighbours[int(i)])
+                #print(np.array(complete_connections))
+                single_connections[k] = (resting_neighbours[int(i)],int(number_of_excited_cells_connected[int(j)]))
                 k += 1
             
         #print(resting_neighbours.reshape(self.L,self.L))
         #print(number_of_excited_cells_connected.reshape(self.L,self.L))
-        print(connections)
-        
+        #print(x)
+        #print(neighbours_list)
+        #print(single_connections)
+        complete_connections = [complete_connections[i] for i in range(len(complete_connections)) if len(complete_connections[i]) != 0]
+        #print(np.array(complete_connections))#.reshape(self.L,self.L))
+        self.connections_full.extend([complete_connections])
         receive_current = self.index[inward_current > 0]
         
         get_excited = receive_current[inward_current[receive_current] >= self.threshold]
@@ -251,8 +260,8 @@ class Atrium():
  
             self.CMP2D_timestep()
         
-A = Atrium(hexagonal = True,L = 4, v_para = 1,
-                     v_tran_1 = 1, v_tran_2 = 1,
-                     threshold = 0.5, p = 0.25, rp = 50, tot_time = 2,
+A = Atrium(hexagonal = True,L = 20, v_para = 0.5,
+                     v_tran_1 = 0.5, v_tran_2 = 0.5,
+                     threshold = 0.2, p = 0.25, rp = 50, tot_time = 20,
                      pace_rate = 220, s1 = 10, s2 = 40, s3 = 30)
 A.CMP2D()
