@@ -295,17 +295,21 @@ class Atrium():
         
         x = self.states[0]
         
+        ## finds neighbours
         neighbours = np.array([self.neighbours[:,x]])
             
         neighbours = np.array(neighbours[~np.isnan(neighbours)], dtype = int) 
-        neighbours = neighbours[self.resting[neighbours]]        
+        neighbours = neighbours[self.resting[neighbours]]      ## resting neighbours   
         
+        ## functional and dysfunctional cells
         neighbours_fun = neighbours[self.dysfunctional_cells[neighbours]]
         neighbours_dys = neighbours[~self.dysfunctional_cells[neighbours]]
         
+        ## which dysfunctional cells excite with probability e
         e_comp_val2 = np.random.rand(len(neighbours_dys))
         neighbours_dys = neighbours_dys[e_comp_val2 > self.nonfire_prob]
-
+        
+        ## sets cells to be excited in the next timestep
         self.tbe[neighbours_fun] = True
         self.tbe[neighbours_dys] = True
         
@@ -316,25 +320,33 @@ class Atrium():
     def Conduct2(self):
         
         x = self.states[0]
-            
+        
+        ## makes a list of lists of resting neighbours of the excited cells
         neighbours_list = [i[self.resting[i]] for i in self.neighbour_list[x]]
 
+        ## array to count incoming current
         inward_current = np.zeros(self.L * self.L)
         
+        ## goes through all the excited cells and adds 1/N to their neighbours' inward_current 
         for i in range(len(neighbours_list)):
             
             if len(neighbours_list[i]) != 0:
                 inward_current[neighbours_list[i]] += 1 / float(len(neighbours_list[i]))
         
+        ## which cells have an inward cuurent 
         receive_current = self.index[inward_current > 0]
        
+        ## which cells have an inward current over the threshold
         get_excited = receive_current[inward_current[receive_current] >= self.threshold]
         
+        ## which cells have an inward current under the threshold
         possible_excited = receive_current[inward_current[receive_current] < self.threshold]
         
+        ## which cells with less than the threshold excite with probability p
         e_comp_val3 = np.random.rand(len(possible_excited))
         possible_excited = possible_excited[e_comp_val3 <= self.p]
 
+        ## sets cells to be excited next timestep
         self.tbe[possible_excited] = True
         self.tbe[get_excited] = True
         
@@ -348,11 +360,14 @@ class Atrium():
         x = self.states[0]
         if len(x) > 0: 
             
+            ## finds the rate of excitation
             self.excitation_rate[x] = self.t - self.last_excitation[x]
             self.last_excitation[x] = self.t
         
+            ## find average of excitation
             a = sum(self.excitation_rate[x])/len(self.excitation_rate[x])
             
+            ## if average rate of excitation is less than 90% of pace rate it's AF
             if a < self.pace_rate * 0.9:
                 self.AF = True
                 self.t_AF += 1

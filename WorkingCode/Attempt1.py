@@ -262,6 +262,12 @@ class Atrium():
         x = self.states[0]
         #print(x)
         resting_neighbours = np.zeros_like(x)
+        
+        ### pos_neighbours is the neighbour if the connection exists and 
+        ### neighbours is whether the connection exists
+        
+        
+        ## finds the number of resting neighbours of each excited cell
         resting_neighbours[self.resting[self.pos_neighbours[0][x]] * self.neighbours[0][x]] += 1
         resting_neighbours[self.resting[self.pos_neighbours[1][x]] * self.neighbours[1][x]] += 1
         resting_neighbours[self.resting[self.pos_neighbours[2][x]] * self.neighbours[2][x]] += 1
@@ -273,6 +279,8 @@ class Atrium():
 
         inward_current = np.zeros(self.L * self.L)
         
+        
+        ### adds 1/N to each of the neighbours (VERY SLOW)
         for i in range(len(x)):
             for j in range(6):
                 if resting_neighbours[i] != 0:
@@ -281,13 +289,17 @@ class Atrium():
         #print(inward_current)
         receive_current = self.index[inward_current > 0]
        
+        ## which cells have an inward current over the threshold
         get_excited = receive_current[inward_current[receive_current] >= self.threshold]
         
+        ## which cells have an inward current under the threshold
         possible_excited = receive_current[inward_current[receive_current] < self.threshold]
         
+        ## which cells with less than the threshold excite with probability p
         e_comp_val3 = np.random.rand(len(possible_excited))
         possible_excited = possible_excited[e_comp_val3 <= self.p]
 
+        ## sets cells to be excited next timestep
         self.tbe[possible_excited] = True
         self.tbe[get_excited] = True
         
