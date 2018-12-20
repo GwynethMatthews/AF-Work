@@ -23,8 +23,8 @@ class Atrium():
     s3: seed for parallel connection selection
     s4: seed for cell firing selection (e or p)
     """
-    def __init__(self, hexagonal = False, model = 1, L = 200, v_para = 1,
-                 v_tran_1 = 0.1, v_tran_2 = 0.6, d = 0.05, e = 0.05, 
+    def __init__(self, hexagonal = False, model = 2, L = 200, v_para = 1,
+                 v_tran_1 = 1, v_tran_2 = 1, d = 0.05, e = 0.05, 
                  threshold = 0.25, p = 0.05, rp = 50, tot_time = 10**6,
                  pace_rate = 220, s1 = 1, s2 = 2, s3 = 3, s4 = 4):
         
@@ -48,7 +48,7 @@ class Atrium():
         self.p = p ## probability of cells bellow threshold exciting
         
         self.index = np.arange(0, L*L) ## cell positions in each array
-        self.position = self.index.reshape(L, L)
+        self.position = self.index.reshape(L, L) ## used in the odd or even for the hexagonal model
         
         self.first_col = np.arange(0, L * L, L) ## cell index of left most column
         self.not_first_col = self.index[self.index % L != 0] ## cell index for all cells except the left most column
@@ -60,11 +60,12 @@ class Atrium():
         self.seed_connections = s2 ## seed for cell connections
         self.seed_prop = s4 ## seed for dynamical probabilities e/p
         
-        # Neighbours        
+        # Neighbours     
+        ###### SETTING NEIGHBOURS FOR SQUARE MODEL #######
         if self.hexagonal == False:
             ## up, right, down, left 
             self.pos_neighbours = np.array([np.full((L*L),
-                    fill_value = None,dtype = float)]*4) ## all neighbours (i.e. if all nu == 1)
+                    fill_value = L*L)]*4) ## all neighbours (i.e. if all nu == 1)
             self.neighbours = np.array([np.zeros(L*L,
                     dtype = bool)]*4) ## whether they actually have the neighbours
             
@@ -115,14 +116,10 @@ class Atrium():
                         self.neighbours[2][j] = True
                         self.neighbours[0][j + L] = True
                         
-            self.neighbour_list = np.array([[self.pos_neighbours[0][x][self.neighbours[0][x]],
-                                         self.pos_neighbours[1][x][self.neighbours[1][x]],
-                                         self.pos_neighbours[2][x][self.neighbours[2][x]],
-                                         self.pos_neighbours[3][x][self.neighbours[3][x]]] for x in self.index])
-                        
+        ###### SETTING NEIGHBOURS FOR HEXAGONAL MODEL #######
         if self.hexagonal == True: # up_left, up_right, right, down_right, down_left, left
             self.pos_neighbours = np.array([np.full((L*L),
-                    fill_value = None, dtype = float)]*6) ## all neighbours (i.e. if all nu == 1) 
+                    fill_value = L*L)]*6) ## all neighbours (i.e. if all nu == 1) 
             self.neighbours = np.array([np.zeros(L*L,
                     dtype = bool)]*6) ## whether they actually have the neighbours
     
@@ -135,13 +132,13 @@ class Atrium():
             
             for j in self.index:
                     
-                if j in self.last_col:
-                    ## last column can't have connections to the right 
-                    ## regardless of odd or even
-                    self.pos_neighbours[2][j] = None
-                    self.neighbours[2][j] = False
+#                if j in self.last_col:
+#                    ## last column can't have connections to the right 
+#                    ## regardless of odd or even
+#                    self.pos_neighbours[2][j] = None
+#                    self.neighbours[2][j] = False
                         
-                else:
+                if j not in self.last_col: #else:
                     ## all other cells can have a connection to the right and 
                     ## the cell to their right will have a connection to the left
                     self.pos_neighbours[2][j] = int(j + 1)
@@ -218,23 +215,18 @@ class Atrium():
                                 
                                 self.neighbours[3][j] = True
                                 self.neighbours[0][j + L + 1] = True
-                   
-            self.neighbour_list = np.array([[self.pos_neighbours[0][x][self.neighbours[0][x]],
-                                         self.pos_neighbours[1][x][self.neighbours[1][x]],
-                                         self.pos_neighbours[2][x][self.neighbours[2][x]],
-                                         self.pos_neighbours[3][x][self.neighbours[3][x]],
-                                         self.pos_neighbours[4][x][self.neighbours[4][x]],
-                                         self.pos_neighbours[5][x][self.neighbours[5][x]]] for x in self.index])
-    
-    
+                                
+        #######################################################################
+                    
         self.phases = np.full((L*L),fill_value = self.rp) # state cell is in (0 = excited, rp = resting)       
         self.states = [[]]*self.rp # list of lists containing cells in each state except resting
-        self.resting = np.full([L*L],fill_value = True, dtype = bool) # can they be excited
+        self.resting = np.full([L*L + 1],fill_value = True, dtype = bool) # can they be excited
+        self.resting[L*L] = False
         self.tbe = np.full([L*L],fill_value = False, dtype = bool) # cells to be excited in next timestep
         
-        self.t = 0
+        self.t = 0 # time
         
-        np.random.seed(self.seed_prop)
+        np.random.seed(self.seed_prop)  ## Setting seed for propagation
     
         
     def SinusRhythm(self):
@@ -243,7 +235,7 @@ class Atrium():
         
     def Relaxing(self):
 
-        self.resting[self.tbe] = False
+        self.resting[:-1][self.tbe] = False
         self.resting[self.states[-1]] = True
         
         del self.states[-1]
@@ -252,13 +244,13 @@ class Atrium():
     def Relaxing_ani(self):
 
         self.phases[self.tbe] = 0
-        self.phases[~self.resting] += 1
+        self.phases[~self.resting[:-1]] += 1
         
         # Needed for ECG
 #        self.V[self.tbe] = 20.
 #        self.V[~self.resting] -= 2.2
         
-        self.resting[self.tbe] = False
+        self.resting[:-1][self.tbe] = False
         self.resting[self.states[-1]] = True
         
         del self.states[-1]
@@ -268,16 +260,25 @@ class Atrium():
     def Conduct(self):
         
         x = self.states[0]
-            
-        neighbours_list = [i[self.resting[i]] for i in self.neighbour_list[x]]
+        #print(x)
+        resting_neighbours = np.zeros_like(x)
+        resting_neighbours[self.resting[self.pos_neighbours[0][x]] * self.neighbours[0][x]] += 1
+        resting_neighbours[self.resting[self.pos_neighbours[1][x]] * self.neighbours[1][x]] += 1
+        resting_neighbours[self.resting[self.pos_neighbours[2][x]] * self.neighbours[2][x]] += 1
+        resting_neighbours[self.resting[self.pos_neighbours[3][x]] * self.neighbours[3][x]] += 1
+        resting_neighbours[self.resting[self.pos_neighbours[4][x]] * self.neighbours[4][x]] += 1
+        resting_neighbours[self.resting[self.pos_neighbours[5][x]] * self.neighbours[5][x]] += 1
+        #print(resting_neighbours)
+        #neighbours_list = [i[self.resting[i]] for i in self.neighbour_list[x]]
 
         inward_current = np.zeros(self.L * self.L)
         
-        for i in range(len(neighbours_list)):
-            
-            if len(neighbours_list[i]) != 0:
-                inward_current[neighbours_list[i]] += float(1) / len(neighbours_list[i])
+        for i in range(len(x)):
+            for j in range(6):
+                if resting_neighbours[i] != 0:
+                    inward_current[self.pos_neighbours[j][x[i]][self.neighbours[j][x[i]]][self.resting[self.pos_neighbours[j][x[i]][self.neighbours[j][x[i]]]]]] += float(1) / resting_neighbours[i]
         
+        #print(inward_current)
         receive_current = self.index[inward_current > 0]
        
         get_excited = receive_current[inward_current[receive_current] >= self.threshold]
@@ -325,7 +326,7 @@ class Atrium():
             
         self.Relaxing()
         self.Conduct()
-        self.TimeInAF()
+        #self.TimeInAF()
         self.t += 1
     
     def CMP2D_timestep_ani2(self):
@@ -336,7 +337,7 @@ class Atrium():
         self.Relaxing_ani()
         self.Conduct()
 
-        self.TimeInAF()
+        #self.TimeInAF()
         self.t += 1
         
     def CMP2D(self):
@@ -345,4 +346,9 @@ class Atrium():
         while self.t < self.tot_time:
             self.CMP2D_timestep2()
             
-        
+    
+#A = Atrium(hexagonal = True,model = 2, L = 4, v_para = 1,
+#                     v_tran_1 = 1, v_tran_2 = 1,
+#                     threshold = 0.5, p = 0.25, rp = 50, tot_time = 10,
+#                     pace_rate = 220, s2 = 10, s3 = 40, s4 = 30)
+#A.CMP2D()    

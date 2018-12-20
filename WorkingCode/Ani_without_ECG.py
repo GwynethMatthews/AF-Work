@@ -1,5 +1,5 @@
 """Atrium is the normal model (both Sq and Hex)"""
-import Atrium_new as AC
+import Attempt1 as AC
 import numpy as np
 from scipy.ndimage import gaussian_filter
 import matplotlib.pyplot as plt
@@ -14,7 +14,7 @@ convolve = False
 #                 v_tran_1 = 0.49, v_tran_2 = 0.49, d = 0.05,
 #                 threshold = 0.5, p = 0.75, e = 0.05, rp = 30, tot_time = 10000, 
 #                 pace_rate = 220, s1 = 100, s2 = 4760, s3 = 3306, s4 = 476)
-A = AC.Atrium(hexagonal = True, model = 1, L = 200, v_para = 0.6,
+A = AC.Atrium(hexagonal = True, model = 2, L = 100, v_para = 0.6,
                      v_tran_1 = 0.6, v_tran_2 = 0.5,
                      threshold = 0.5, p = 0.25, rp = 50, tot_time = 10**6,
                      pace_rate = 220, s2 = 10, s3 = 40, s4 = 30)
@@ -44,8 +44,8 @@ def update2(frame_number,collection,A,convolve):
     """Next frame update for animation without ECG"""
     if A.model == 1:
         A.CMP2D_timestep_ani1()
-    #else:
-     #   A.CMP2D_timestep_ani2()
+    else:
+        A.CMP2D_timestep_ani2()
     
     # WITH CONVOLUTION
     if convolve == True:
