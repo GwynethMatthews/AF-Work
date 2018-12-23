@@ -110,7 +110,6 @@ class Atrium:
                         neighbours[2][j] = int(j + 1)
                         neighbours[5][j + 1] = int(j)
 
-            for j in self.index:
                 # even
                 if j in self.position[np.arange(0, self.L, 2)]:
 
@@ -171,7 +170,6 @@ class Atrium:
                         neighbours[1][j] = int(j + 1)
                         neighbours[3][j + 1] = int(j)
 
-            for j in self.index:
 
                 if num_rand_tran[j] <= self.nu_trans:
 
@@ -238,10 +236,10 @@ class Atrium:
         return None   # Dummy that gets overriden by inheriting classes
 
     def cmp_timestep(self):
-        self.sinus_rhythm()    # Now checks if correct time inside this function
-
         self.relaxing()    # Changes self.states, cycles cells through the refractory states
-        #self.sinus_rhythm() 
+        
+        self.sinus_rhythm()    # Now checks if correct time inside this function
+        
         excited_cells = self.states[0]
 
         self.conduct(excited_cells)
@@ -257,9 +255,6 @@ class Atrium:
         self.phases[~self.resting] += 1
 
         self.cmp_timestep()
-        
-        #self.phases[self.to_be_excited] = 0  # Needed for animation
-        #self.phases[~self.resting] += 1
 
     def cmp_full(self):
         np.random.seed(self.seed_prop)   # Sets seed for all dysfunctional firings etc.
@@ -305,9 +300,10 @@ class DysfuncModel(Atrium):
             self.excite_cells(self.first_fun)
 
     def resting_neighbours(self, excited_cells):
-        neighbours = np.array([self.neighbours[0][excited_cells], self.neighbours[1][excited_cells],
-                               self.neighbours[2][excited_cells], self.neighbours[3][excited_cells],
-                               self.neighbours[4][excited_cells], self.neighbours[5][excited_cells]])
+        if self.hexagonal:
+            neighbours = np.array([self.neighbours[0][excited_cells], self.neighbours[1][excited_cells],
+                                   self.neighbours[2][excited_cells], self.neighbours[3][excited_cells],
+                                   self.neighbours[4][excited_cells], self.neighbours[5][excited_cells]])
 
         if not self.hexagonal:  # square lattice, rarely used so ignore check
             neighbours = np.array([self.neighbours[0][excited_cells], self.neighbours[1][excited_cells],
