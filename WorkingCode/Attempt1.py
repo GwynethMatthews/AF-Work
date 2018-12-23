@@ -1,12 +1,12 @@
 import numpy as np
 #import scipy.stats as stats
-""" Standard Conduction Model"""
+
 
 
 class Atrium():
     """Creates the myocardium's structure.
     hexagonal: False = Square Lattice, True = Hexagonal Lattice
-    model: 1 = standard CMP model, 2 = source-sink model
+    model:  2 = source-sink model
     L: Lattice length
     v_para: nu parallel 
     v_tran_1: nu transfers in square lattice or nu of main diagonal in hexagonal
