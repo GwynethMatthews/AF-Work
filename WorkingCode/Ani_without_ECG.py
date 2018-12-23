@@ -1,5 +1,5 @@
 """Atrium is the normal model (both Sq and Hex)"""
-import Attempt1 as AC
+import Atrium_new as AC
 import numpy as np
 from scipy.ndimage import gaussian_filter
 import matplotlib.pyplot as plt
@@ -117,7 +117,7 @@ if A.hexagonal == True:
     ax.set_axis_off()
     ani = animation.FuncAnimation(fig1, update2, frames = A.tot_time
                                    ,fargs = (collection, A, convolve), 
-                                   interval= 100, repeat = None)
+                                   interval= 500, repeat = None)
     plt.axis([-1, A.L + 1, -1, A.L + 1])
 
 

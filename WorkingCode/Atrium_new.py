@@ -49,7 +49,7 @@ class Atrium():
         if self.model == 1:
             self.dysfunctional_prob = d
             self.nonfire_prob = e
-            self.dysfunctional_cells = np.full([L*L],fill_value = False, dtype = bool) 
+            self.dysfunctional_cells = np.full([L*L],fill_value = True, dtype = bool) 
             
         
         if self.model == 2:
@@ -64,6 +64,7 @@ class Atrium():
         self.first_col = np.arange(0, L * L, L)
         self.not_first_col = self.index[self.index % L != 0]
         self.last_col = np.arange(0, L * L, L) + L - 1
+        self.last_row = np.arange((L * L) - L, L * L)
         
         #System seeds
         self.seed_dysfunc = s1
@@ -114,26 +115,17 @@ class Atrium():
    
             if self.model == 1:
                 for j in self.index:
-                    
-                    if self.dysfunctional_prob > num_rand_dysfunc[j]: # dysfunctional
-                        self.dysfunctional_cells[j] = False
                         
-                    if self.dysfunctional_prob <= num_rand_dysfunc[j]: # functional
-                        self.dysfunctional_cells[j] = True
+                    if self.dysfunctional_prob <= num_rand_dysfunc[j]: # dysfunctional
+                        self.dysfunctional_cells[j] = False
 
             for j in self.index:
                 
                 if num_rand_para[j] <= self.parallel_prob:
                     
-                    if j in np.arange(0, L * L, L):
-                        self.neighbours[1][j] = int(j+1)
-                        self.neighbours[3][j + 1] = int(j)
-                    
-
-                    elif j in (np.arange(0, L * L, L) + L - 1):
+                    if j in self.last_col:
                         self.neighbours[1][j] = None
-                        
-                        
+                          
                     else:
                         self.neighbours[1][j] = int(j+1)             
                         self.neighbours[3][j + 1] = int(j)
@@ -142,7 +134,7 @@ class Atrium():
                 
                 if num_rand_tran[j] <= self.transverse_prob: 
                     
-                    if j in np.arange((L * L) - L, L * L):
+                    if j in self.last_row:
                         self.neighbours[2][j] = j - ((L * L) - L)
                         self.neighbours[0][j - ((L * L) - L)] = j
                     
@@ -173,12 +165,9 @@ class Atrium():
             if self.model == 1:
                 
                 for j in self.index:
-                
-                    if d > num_rand_dysfunc[j]: # dysfunctional
-                        self.dysfunctional_cells[j] = False
                         
-                    if d <= num_rand_dysfunc[j]: # functional
-                        self.dysfunctional_cells[j] = True
+                    if d <= num_rand_dysfunc[j]: # dysfunctional
+                        self.dysfunctional_cells[j] = False
                         
             for j in self.index:
                 
@@ -209,7 +198,7 @@ class Atrium():
                 else:
                 #if j in self.position[np.arange(1, L, 2)]:
                     
-                    if j in np.arange(self.L * self.L - self.L, self.L * self.L): ### last row
+                    if j in self.last_row: ### last row
                         
                         if num_rand_tran1[j] <= self.transverse_prob_l:
                             self.neighbours[4][j] = j - ((self.L * self.L) - self.L)
@@ -225,7 +214,7 @@ class Atrium():
                         
                         if j not in self.last_col:
                             
-                            if j in np.arange(self.L * self.L - self.L, self.L * self.L):
+                            if j in self.last_row:
                                 self.neighbours[3][j] = j - ((self.L*self.L) - self.L) + 1
                                 self.neighbours[0][j - ((self.L*self.L) - self.L) + 1] = j
                                 
@@ -331,7 +320,7 @@ class Atrium():
         for i in range(len(neighbours_list)):
             
             if len(neighbours_list[i]) != 0:
-                inward_current[neighbours_list[i]] += 1 / float(len(neighbours_list[i]))
+                inward_current[neighbours_list[int(i)]] += 1 / float(len(neighbours_list[int(i)]))
         
         ## which cells have an inward cuurent 
         receive_current = self.index[inward_current > 0]
