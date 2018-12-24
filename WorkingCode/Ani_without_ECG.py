@@ -12,8 +12,8 @@ plt.rcParams['animation.ffmpeg_path']
 convolve = False
 #AC.Atrium(hexagonal=False, L=200, rp=50, tot_time=10**6, nu_para=0.6, nu_trans=0.6,
 #                 pace_rate=220, p_nonfire=0.05, seed_connections=1, seed_prop=4)
-#A = AC.SourceSinkModel(L = 10)
-A = AC.DysfuncModel(L = 10)
+A = AC.SourceSinkModel(L = 100)
+#A = AC.DysfuncModel(hexagonal = True, L = 10)
 #A = AC.Atrium(hexagonal = True, model = 2, L = 100, v_para = 0.6,
 #                     v_tran_1 = 0.6, v_tran_2 = 0.5,
 #                     threshold = 0.5, p = 0.25, rp = 50, tot_time = 10**6,
@@ -27,7 +27,7 @@ def update1(frame_number, mat, A, convolve):
     #    A.CMP2D_timestep_ani1()
     #else:
     #A.sinus_rhythm()
-    print(A.phases[0])
+    #print(A.phases[0])
     A.cmp_animation()
     ###### WITH CONVOLUTION ######
     if convolve == True:

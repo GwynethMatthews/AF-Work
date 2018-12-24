@@ -23,7 +23,7 @@ class Atrium():
     s3: seed for parallel connection selection
     s4: seed for cell firing selection (e or p)
     """
-    def __init__(self, hexagonal = False, model = 1, L = 200, v_para = 1,
+    def __init__(self, hexagonal = False, model = 2, L = 200, v_para = 1,
                  v_tran_1 = 1, v_tran_2 = 0.6, d = 0.05, e = 0.05, 
                  threshold = 0.25, p = 0.05, rp = 50, tot_time = 10**6,
                  pace_rate = 220, s1 = 1, s2 = 2, s3 = 3, s4 = 4):

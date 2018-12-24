@@ -1,5 +1,5 @@
 import numpy as np
-
+inward_current = None
 
 class Atrium:
     """Creates the myocardium's structure.
@@ -23,7 +23,7 @@ class Atrium:
     """
     def __init__(self, hexagonal=False, L=200, rp=50, tot_time=10**6, nu_para=0.6, nu_trans=0.6,
                  pace_rate=220, p_nonfire=0.05, seed_connections=1, seed_prop=4):
-
+        global inward_current
         # System Parameters
         self.hexagonal = hexagonal
         self.L = L
@@ -40,6 +40,7 @@ class Atrium:
         # System cell positions
         self.index = np.arange(0, L * L)   # cell positions in each array
         self.position = self.index.reshape(L, L)
+        inward_current = np.zeros_like(self.index)
 
         self.first_col = np.arange(0, L * L, L)
         self.not_first_col = self.index[self.index % L != 0]
@@ -73,8 +74,9 @@ class Atrium:
         self.list_of_neighbours = None  # Dummy that gets overwritten in create_neighbours
         self.create_neighbours()
 
-        self.neighbour_list = np.array([[x for x in self.list_of_neighbours[i]
-                                         if str(x) != 'nan'] for i in self.index])
+        self.neighbour_list = np.array([np.array([x for x in 
+                                 self.list_of_neighbours[i] if str(x) 
+                                 != 'nan'],dtype = int) for i in self.index])
 
     def set_AF_measuring_vars(self):
         self.excitation_rate = np.zeros(self.L**2, dtype=int)
@@ -88,7 +90,7 @@ class Atrium:
 
     def create_neighbours(self):
         # Setting connections and dysfunctional cells
-        a = np.full((self.L**2), fill_value=False, dtype=float)
+        a = np.full((self.L**2), fill_value=None, dtype=float)
         if self.hexagonal:  # if self.hexagonal == True:
             neighbours = np.array([a] * 6)  # up_left, up_right, right, down_right, down_left, left
 
@@ -201,7 +203,7 @@ class Atrium:
         self.cycle_through_states()
 
     def excitation_tracker(self, excited_cells):
-        self.excitation_rate[excited_cells] = np.abs(self.last_excitation[excited_cells] - self.t)
+        self.excitation_rate[excited_cells] = self.t - self.last_excitation[excited_cells]
         self.last_excitation[excited_cells] = self.t
 
     def AF_checker(self, excited_cells):
@@ -345,14 +347,14 @@ class SourceSinkModel(Atrium):
         if np.remainder(self.t, self.pace_rate) == 0:
             self.to_be_excited[self.first_col] = True
 
-    def get_inward_current(self, neighbours_list, resting_neighbours):
-        inward_current = np.zeros(self.L * self.L)
+    def get_inward_current(self, neighbours_list):
+        inward_current = np.zeros(self.L**2)
+    
+        for i in neighbours_list:
 
-        for i in range(len(neighbours_list)):
-
-            if resting_neighbours[i] != 0:
-                inward_current[np.array(neighbours_list[i], dtype=int)] += float(1) / np.array(resting_neighbours[i])
-
+            if len(i) != 0:
+                inward_current[i] += float(1)/ len(i)
+                
         return inward_current
 
     def cells_miss_threshold(self, receive_current, inward_current):
@@ -364,15 +366,18 @@ class SourceSinkModel(Atrium):
         return possible_excited
 
     def find_resting_neighbours(self, excited_cells):
-        neighbours_list = [[y for y in self.neighbour_list[i] if self.resting[int(y)]] for i in excited_cells]
-        resting_neighbours = list(map(len, neighbours_list))
+        ###### NOTE: replaced line 370 with 371 for speed
+        #neighbours_list = [[y for y in self.neighbour_list[i] if self.resting[int(y)]] for i in excited_cells]
+        neighbours_list = [j[self.resting[j]] for j in self.neighbour_list[excited_cells]]
+        ###### NOTE: removed this and used len in get_inward_current
+       #resting_neighbours = list(map(len, neighbours_list))
 
-        return neighbours_list, resting_neighbours
+        return neighbours_list
 
     def conduct(self, excited_cells):
-        neighbours_list, resting_neighbours = self.find_resting_neighbours(excited_cells)
+        neighbours_list = self.find_resting_neighbours(excited_cells)
 
-        inward_current = self.get_inward_current(neighbours_list, resting_neighbours)  # amount of current received
+        inward_current = self.get_inward_current(neighbours_list)  # amount of current received
         receive_current = self.index[inward_current > 0]  # Indices which receive any current from neighbours
 
         hit_thresh_so_excite = receive_current[inward_current[receive_current] >= self.threshold]
