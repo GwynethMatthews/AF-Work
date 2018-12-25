@@ -298,7 +298,7 @@ class DysfuncModel(Atrium):
                 self.dysfunctional_cells[j] = True
 
     def sinus_rhythm(self):
-        if np.remainder(self.t, self.pace_rate) == 0:
+        if self.t % self.pace_rate == 0:
             dysfunc_fire_rand_nums = np.random.rand(len(self.first_dys))
             successful_dysfunctional_cells = self.first_dys[dysfunc_fire_rand_nums > self.p_nonfire]
 
@@ -348,10 +348,10 @@ class SourceSinkModel(Atrium):
         self.threshold = threshold
 
     def sinus_rhythm(self):
-        if np.remainder(self.t, self.pace_rate) == 0:
+        if self.t % self.pace_rate == 0:
             self.to_be_excited[self.first_col] = True
 
-    def get_inward_current(self, neighbours_list):
+    def get_inward_current(self, neighbours_list,resting_neighbours):
         inward_current = np.zeros(self.L**2)
         
         ####### NOTE: using concatenated_neighbours_list and current_to_each_cell
@@ -363,8 +363,8 @@ class SourceSinkModel(Atrium):
         #######       current_to_each_cell then gets inversed so 2 become 0.5, 3 becomes 0.333, etc
         concatenated_neighbours_list = np.concatenate(neighbours_list)
         
-        current_to_each_cell = np.concatenate([[len(i)]*len(i) for i in neighbours_list])
-        current_to_each_cell = float(1)/current_to_each_cell
+        current_to_each_cell = np.concatenate([[i]*i for i in resting_neighbours])
+        current_to_each_cell = 1./current_to_each_cell
         
         inward_current[concatenated_neighbours_list] += current_to_each_cell
 #        for i in neighbours_list:
@@ -379,26 +379,30 @@ class SourceSinkModel(Atrium):
 
         miss_threshold_fire_rand_nums = np.random.rand(len(possible_excited))
         possible_excited = possible_excited[miss_threshold_fire_rand_nums > self.p_nonfire]  # Fire if over p_nonfire
-
+        
         return possible_excited
 
     def find_resting_neighbours(self, excited_cells):
         ###### NOTE: replaced line 387 with 388 for speed
         #neighbours_list = [[y for y in self.neighbour_list[i] if self.resting[int(y)]] for i in excited_cells]
         neighbours_list = [j[self.resting[j]] for j in self.neighbour_list[excited_cells]]
-        ###### NOTE: removed this and used len in get_inward_current
-        #resting_neighbours = list(map(len, neighbours_list))
+        
+        resting_neighbours = list(map(len, neighbours_list))
 
-        return neighbours_list
+        return neighbours_list, resting_neighbours
 
     def conduct(self, excited_cells):
-        neighbours_list = self.find_resting_neighbours(excited_cells)
+        neighbours_list, resting_neighbours = self.find_resting_neighbours(excited_cells)
         
-        inward_current = self.get_inward_current(neighbours_list)  # amount of current received
+        inward_current = self.get_inward_current(neighbours_list,resting_neighbours)  # amount of current received
+        
         receive_current = self.index[inward_current > 0]  # Indices which receive any current from neighbours
-
+        
         hit_thresh_so_excite = receive_current[inward_current[receive_current] >= self.threshold]
         miss_thresh_but_still_excite = self.cells_miss_threshold(receive_current, inward_current)
 
-        self.excite_cells(miss_thresh_but_still_excite)
-        self.excite_cells(hit_thresh_so_excite)
+        ###### NOTE: Removed the use of the excite_cells() to save a tiny amount of time
+        self.to_be_excited[miss_thresh_but_still_excite] = True
+        self.to_be_excited[hit_thresh_so_excite] = True
+        #self.excite_cells(miss_thresh_but_still_excite)
+        #self.excite_cells(hit_thresh_so_excite)

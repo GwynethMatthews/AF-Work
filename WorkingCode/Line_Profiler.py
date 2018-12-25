@@ -7,17 +7,17 @@ import Atrium_new_Jack as AC
    
 from line_profiler import LineProfiler            
 
-A = AC.SourceSinkModel(hexagonal = True, tot_time = 10**4)
-#A = AC.DysfuncModel(hexagonal = True, tot_time = 10**4)
+A = AC.SourceSinkModel(hexagonal = True, tot_time = 10**3)
+#A = AC.DysfuncModel(hexagonal = True, tot_time = 10**3)
 lp = LineProfiler()
 lp_wrapper = lp(A.cmp_full)
-lp.add_function(A.cmp_timestep)
+#lp.add_function(A.cmp_timestep)
 #lp.add_function(A.sinus_rhythm)
 lp.add_function(A.conduct)
 #lp.add_function(A.relaxing)
-lp.add_function(A.get_inward_current)
-lp.add_function(A.find_resting_neighbours)
-
+#lp.add_function(A.get_inward_current)
+#lp.add_function(A.find_resting_neighbours)
+lp.add_function(A.cells_miss_threshold)
 lp_wrapper()
 lp.print_stats()
 
