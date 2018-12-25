@@ -219,11 +219,11 @@ class Atrium:
         else:
             self.AF = False
 
-    def excite_cells(self, cells):
-        self.to_be_excited[cells] = True
+    def excite_cells(self, excited_cells):
+        self.to_be_excited[excited_cells] = True
 
-    def unexcite_cells(self, cells):
-        self.to_be_excited[cells] = False
+    def unexcite_cells(self, excited_cells):
+        self.to_be_excited[excited_cells] = False
 
     def time_in_AF(self, excited_cells):
         if excited_cells.size > 0:      # Checks if non empty
@@ -238,13 +238,13 @@ class Atrium:
         return None   # Dummy that gets overriden by inheriting classes
 
     def cmp_timestep(self):
-        self.relaxing()    # Changes self.states, cycles cells through the refractory states
-        
-        self.sinus_rhythm()    # Now checks if correct time inside this function
-        
-        excited_cells = self.states[0]
+        self.sinus_rhythm() # Now checks if correct time inside this function
 
-        self.conduct(excited_cells)
+        self.relaxing()    # Changes self.states, cycles cells through the refractory states
+
+        excited_cells = self.states[0]
+        if len(excited_cells) > 0:    # NOTE: added this so that the new method of finding inwards_current doesn't break the animation
+            self.conduct(excited_cells)
 
         self.unexcite_cells(excited_cells)  # Were excited, now refractory
 
@@ -253,6 +253,10 @@ class Atrium:
 
     def cmp_animation(self):
         # NOTE: I moved phases above sinus_rhythm, does it make a difference???
+        ######  Put sinus_rhythm() above the phases as well so that first column 
+        ######  is excited in the animation. Doesn't make a difference just sets the to_be_excited values to True twice
+        self.sinus_rhythm()
+        
         self.phases[self.to_be_excited] = 0  # Needed for animation
         self.phases[~self.resting] += 1
 
@@ -349,11 +353,24 @@ class SourceSinkModel(Atrium):
 
     def get_inward_current(self, neighbours_list):
         inward_current = np.zeros(self.L**2)
-    
-        for i in neighbours_list:
-
-            if len(i) != 0:
-                inward_current[i] += float(1)/ len(i)
+        
+        ####### NOTE: using concatenated_neighbours_list and current_to_each_cell
+        #######       instead of the for look because it's faster
+        #######       feel free to change the variable names:
+        #######       current_to_each_cell is an array of number of resting cells
+        #######             that many times e.g if cell 1 is excited and has 3 resting
+        #######             neighbours 3 appears 3 times if it's 4 4 appears 4 times
+        #######       current_to_each_cell then gets inversed so 2 become 0.5, 3 becomes 0.333, etc
+        concatenated_neighbours_list = np.concatenate(neighbours_list)
+        
+        current_to_each_cell = np.concatenate([[len(i)]*len(i) for i in neighbours_list])
+        current_to_each_cell = float(1)/current_to_each_cell
+        
+        inward_current[concatenated_neighbours_list] += current_to_each_cell
+#        for i in neighbours_list:
+#
+#            if len(i) != 0:
+#                inward_current[i] += float(1)/ len(i)
                 
         return inward_current
 
@@ -366,17 +383,17 @@ class SourceSinkModel(Atrium):
         return possible_excited
 
     def find_resting_neighbours(self, excited_cells):
-        ###### NOTE: replaced line 370 with 371 for speed
+        ###### NOTE: replaced line 387 with 388 for speed
         #neighbours_list = [[y for y in self.neighbour_list[i] if self.resting[int(y)]] for i in excited_cells]
         neighbours_list = [j[self.resting[j]] for j in self.neighbour_list[excited_cells]]
         ###### NOTE: removed this and used len in get_inward_current
-       #resting_neighbours = list(map(len, neighbours_list))
+        #resting_neighbours = list(map(len, neighbours_list))
 
         return neighbours_list
 
     def conduct(self, excited_cells):
         neighbours_list = self.find_resting_neighbours(excited_cells)
-
+        
         inward_current = self.get_inward_current(neighbours_list)  # amount of current received
         receive_current = self.index[inward_current > 0]  # Indices which receive any current from neighbours
 
