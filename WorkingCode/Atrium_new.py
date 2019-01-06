@@ -197,16 +197,13 @@ class Atrium():
                 #odd
                 else:
                 #if j in self.position[np.arange(1, L, 2)]:
-                    
-                    if j in self.last_row: ### last row
+                    if num_rand_tran1[j] <= self.transverse_prob_l:
                         
-                        if num_rand_tran1[j] <= self.transverse_prob_l:
+                        if j in self.last_row: ### last row
                             self.neighbours[4][j] = j - ((self.L * self.L) - self.L)
                             self.neighbours[1][j - ((self.L * self.L) - self.L)] = j
     
-                    else:
-                        
-                        if num_rand_tran1[j] <= self.transverse_prob_l:
+                        else:
                             self.neighbours[4][j] = j+L
                             self.neighbours[1][j + self.L] = j
                             
