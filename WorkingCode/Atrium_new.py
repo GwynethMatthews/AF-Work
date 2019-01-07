@@ -23,8 +23,8 @@ class Atrium():
     s3: seed for parallel connection selection
     s4: seed for cell firing selection (e or p)
     """
-    def __init__(self, hexagonal = False, model = 1, L = 200, v_para = 1,
-                 v_tran_1 = 0.1, v_tran_2 = 0.6, d = 0.05, e = 0.05, 
+    def __init__(self, hexagonal = False, model = 2, L = 200, v_para = 1,
+                 v_tran_1 = 1, v_tran_2 = 0.6, d = 0.05, e = 0.05, 
                  threshold = 0.25, p = 0.05, rp = 50, tot_time = 10**6,
                  pace_rate = 220, s1 = 1, s2 = 2, s3 = 3, s4 = 4):
         
@@ -49,7 +49,7 @@ class Atrium():
         if self.model == 1:
             self.dysfunctional_prob = d
             self.nonfire_prob = e
-            self.dysfunctional_cells = np.full([L*L],fill_value = False, dtype = bool) 
+            self.dysfunctional_cells = np.full([L*L],fill_value = True, dtype = bool) 
             
         
         if self.model == 2:
@@ -64,6 +64,7 @@ class Atrium():
         self.first_col = np.arange(0, L * L, L)
         self.not_first_col = self.index[self.index % L != 0]
         self.last_col = np.arange(0, L * L, L) + L - 1
+        self.last_row = np.arange((L * L) - L, L * L)
         
         #System seeds
         self.seed_dysfunc = s1
@@ -114,26 +115,17 @@ class Atrium():
    
             if self.model == 1:
                 for j in self.index:
-                    
-                    if self.dysfunctional_prob > num_rand_dysfunc[j]: # dysfunctional
-                        self.dysfunctional_cells[j] = False
                         
-                    if self.dysfunctional_prob <= num_rand_dysfunc[j]: # functional
-                        self.dysfunctional_cells[j] = True
+                    if self.dysfunctional_prob <= num_rand_dysfunc[j]: # dysfunctional
+                        self.dysfunctional_cells[j] = False
 
             for j in self.index:
                 
                 if num_rand_para[j] <= self.parallel_prob:
                     
-                    if j in np.arange(0, L * L, L):
-                        self.neighbours[1][j] = int(j+1)
-                        self.neighbours[3][j + 1] = int(j)
-                    
-
-                    elif j in (np.arange(0, L * L, L) + L - 1):
+                    if j in self.last_col:
                         self.neighbours[1][j] = None
-                        
-                        
+                          
                     else:
                         self.neighbours[1][j] = int(j+1)             
                         self.neighbours[3][j + 1] = int(j)
@@ -142,7 +134,7 @@ class Atrium():
                 
                 if num_rand_tran[j] <= self.transverse_prob: 
                     
-                    if j in np.arange((L * L) - L, L * L):
+                    if j in self.last_row:
                         self.neighbours[2][j] = j - ((L * L) - L)
                         self.neighbours[0][j - ((L * L) - L)] = j
                     
@@ -173,12 +165,9 @@ class Atrium():
             if self.model == 1:
                 
                 for j in self.index:
-                
-                    if d > num_rand_dysfunc[j]: # dysfunctional
-                        self.dysfunctional_cells[j] = False
                         
-                    if d <= num_rand_dysfunc[j]: # functional
-                        self.dysfunctional_cells[j] = True
+                    if d <= num_rand_dysfunc[j]: # dysfunctional
+                        self.dysfunctional_cells[j] = False
                         
             for j in self.index:
                 
@@ -208,21 +197,25 @@ class Atrium():
                 #odd
                 else:
                 #if j in self.position[np.arange(1, L, 2)]:
-                    
-                    if j in np.arange(self.L * self.L - self.L, self.L * self.L):
+                    if num_rand_tran1[j] <= self.transverse_prob_l:
                         
-                        if num_rand_tran1[j] <= self.transverse_prob_l:
+                        if j in self.last_row: ### last row
                             self.neighbours[4][j] = j - ((self.L * self.L) - self.L)
                             self.neighbours[1][j - ((self.L * self.L) - self.L)] = j
-
-                    else:
-                        
-                        if num_rand_tran1[j] <= self.transverse_prob_l:
+    
+                        else:
                             self.neighbours[4][j] = j+L
                             self.neighbours[1][j + self.L] = j
                             
-                        if num_rand_tran2 [j] <= self.transverse_prob_r:
-                            if j not in self.last_col:
+                    if num_rand_tran2 [j] <= self.transverse_prob_r:
+                        
+                        if j not in self.last_col:
+                            
+                            if j in self.last_row:
+                                self.neighbours[3][j] = j - ((self.L*self.L) - self.L) + 1
+                                self.neighbours[0][j - ((self.L*self.L) - self.L) + 1] = j
+                                
+                            else:    
                                 self.neighbours[3][j] = j + self.L + 1
                                 self.neighbours[0][j + self.L + 1] = j
                                 
@@ -235,9 +228,9 @@ class Atrium():
                  self.neighbours[5][i]] for i in self.index]  
         
             
-        self.neighbour_list = np.array([[x for x in 
+        self.neighbour_list = np.array([np.array([x for x in 
                                  self.list_of_neighbours[i] if str(x) 
-                                 != 'nan'] for i in self.index])
+                                 != 'nan'],dtype = int) for i in self.index])
                     
         
         if self.model == 1:
@@ -288,33 +281,21 @@ class Atrium():
         
         x = self.states[0]
         
-        if self.hexagonal == False:
-            
-            neighbours = np.array([self.neighbours[0][x],
-                                   self.neighbours[1][x],
-                                   self.neighbours[2][x],
-                                   self.neighbours[3][x]])
-
-        else: # if self.hexagonal == True
-            
-            neighbours = np.array([self.neighbours[0][x],
-                                   self.neighbours[1][x],
-                                   self.neighbours[2][x],
-                                   self.neighbours[3][x],
-                                   self.neighbours[4][x],
-                                   self.neighbours[5][x]])
-
+        ## finds neighbours
+        neighbours = np.array([self.neighbours[:,x]])
             
         neighbours = np.array(neighbours[~np.isnan(neighbours)], dtype = int) 
-        neighbours = neighbours[self.resting[neighbours]]        
+        neighbours = neighbours[self.resting[neighbours]]      ## resting neighbours   
         
-        
+        ## functional and dysfunctional cells
         neighbours_fun = neighbours[self.dysfunctional_cells[neighbours]]
         neighbours_dys = neighbours[~self.dysfunctional_cells[neighbours]]
         
+        ## which dysfunctional cells excite with probability e
         e_comp_val2 = np.random.rand(len(neighbours_dys))
         neighbours_dys = neighbours_dys[e_comp_val2 > self.nonfire_prob]
-
+        
+        ## sets cells to be excited in the next timestep
         self.tbe[neighbours_fun] = True
         self.tbe[neighbours_dys] = True
         
@@ -325,25 +306,33 @@ class Atrium():
     def Conduct2(self):
         
         x = self.states[0]
-            
-        neighbours_list = [[y for y in self.neighbour_list[i] if self.resting[int(y)] == True] for i in x]
+        
+        ## makes a list of lists of resting neighbours of the excited cells
+        neighbours_list = [i[self.resting[i]] for i in self.neighbour_list[x]]
 
-        resting_neighbours = list(map(len,neighbours_list))
+        ## array to count incoming current
         inward_current = np.zeros(self.L * self.L)
         
+        ## goes through all the excited cells and adds 1/N to their neighbours' inward_current 
         for i in range(len(neighbours_list)):
             
-            if resting_neighbours[i] != 0:
-                inward_current[np.array(neighbours_list[i],dtype = int)] += float(1) / np.array(resting_neighbours[i])
+            if len(neighbours_list[i]) != 0:
+                inward_current[neighbours_list[int(i)]] += 1 / float(len(neighbours_list[int(i)]))
         
+        ## which cells have an inward cuurent 
         receive_current = self.index[inward_current > 0]
-        
+       
+        ## which cells have an inward current over the threshold
         get_excited = receive_current[inward_current[receive_current] >= self.threshold]
         
+        ## which cells have an inward current under the threshold
         possible_excited = receive_current[inward_current[receive_current] < self.threshold]
+        
+        ## which cells with less than the threshold excite with probability p
         e_comp_val3 = np.random.rand(len(possible_excited))
         possible_excited = possible_excited[e_comp_val3 <= self.p]
 
+        ## sets cells to be excited next timestep
         self.tbe[possible_excited] = True
         self.tbe[get_excited] = True
         
@@ -354,26 +343,23 @@ class Atrium():
 
     def TimeInAF(self):
 
-        #not_first_col = self.not_first_col
-        if len(self.states[0]) > 0: 
+        x = self.states[0]
+        if len(x) > 0: 
             
-            x = self.states[0]
-            
-            self.excitation_rate[x] = np.abs(self.last_excitation[x] - self.t)
+            ## finds the rate of excitation
+            self.excitation_rate[x] = self.t - self.last_excitation[x]
             self.last_excitation[x] = self.t
         
-            a = np.mean(self.excitation_rate[x])
-
-            #if self.t > self.pace_rate:
-            if a < self.pace_rate * 0.9 or a > self.pace_rate * 1.5:
+            ## find average of excitation
+            a = sum(self.excitation_rate[x])/len(self.excitation_rate[x])
+            
+            ## if average rate of excitation is less than 90% of pace rate it's AF
+            if a < self.pace_rate * 0.9:
                 self.AF = True
                 self.t_AF += 1
-                print(self.AF)
-                print(self.t)
             
             else:
                 self.AF = False
-                #print(self.AF)
             
 
         
@@ -384,7 +370,7 @@ class Atrium():
             
         self.Relaxing()
         self.Conduct1()
-        #self.TimeInAF()
+        self.TimeInAF()
         self.t += 1
         
     def CMP2D_timestep2(self):
@@ -396,7 +382,7 @@ class Atrium():
         self.Conduct2()
         self.TimeInAF()
         self.t += 1
-        
+    
     def CMP2D_timestep_ani1(self):
 
         if np.remainder(self.t, self.pace_rate) == 0:
@@ -405,7 +391,7 @@ class Atrium():
         self.Relaxing_ani()
         self.Conduct1()
 
-        #self.TimeInAF()
+        self.TimeInAF()
         self.t += 1
             
         
@@ -437,5 +423,8 @@ class Atrium():
        
                 
 
-#A = Atrium(tot_time = 10)
+#A = Atrium(hexagonal = True,model =2, L = 200, v_para = 0.5,
+#                     v_tran_1 = 0.5, v_tran_2 = 0.5,
+#                     threshold = 0.5, p = 0.25, rp = 50, tot_time = 10**6,
+#                     pace_rate = 220, s2 = 10, s3 = 40, s4 = 30)
 #A.CMP2D()

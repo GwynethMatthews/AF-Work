@@ -1,5 +1,5 @@
 """Atrium is the normal model (both Sq and Hex)"""
-import Atrium_new as AC
+import Atrium_new_Jack as AC
 import numpy as np
 from scipy.ndimage import gaussian_filter
 import matplotlib.pyplot as plt
@@ -10,23 +10,30 @@ plt.rcParams['animation.ffmpeg_path']
 ###############################################################################
 # Initiating the Atrium
 convolve = True
-#A = AC.Atrium(hexagonal = True, model = 2, L = 100, v_para = 0.49,
-#                 v_tran_1 = 0.49, v_tran_2 = 0.49, d = 0.05,
-#                 threshold = 0.5, p = 0.75, e = 0.05, rp = 30, tot_time = 10000, 
-#                 pace_rate = 220, s1 = 100, s2 = 4760, s3 = 3306, s4 = 476)
-A = AC.Atrium(hexagonal = True,model =2, L = 200, v_para = 0.5,
-                     v_tran_1 = 0.5, v_tran_2 = 0.5,
-                     threshold = 0.5, p = 0.25, rp = 50, tot_time = 10**6,
-                     pace_rate = 220, s2 = 10, s3 = 40, s4 = 30)
+#AC.Atrium(hexagonal=False, L=200, rp=50, tot_time=10**6, nu_para=0.6, nu_trans=0.6,
+#                 pace_rate=220, p_nonfire=0.05, seed_connections=1, seed_prop=4)
+A = AC.SourceSinkModel(hexagonal = True, L = 100,tot_time = 10000,nu_para=0.395, nu_trans=0.395,seed_connections=1, seed_prop=2)
+#A = AC.DysfuncModel(hexagonal = True, L = 100,tot_time = 10**6)
+#A = AC.Atrium(hexagonal = True, model = 2, L = 100, v_para = 0.6,
+#                     v_tran_1 = 0.6, v_tran_2 = 0.5,
+#                     threshold = 0.5, p = 0.25, rp = 50, tot_time = 10**6,
+#                     pace_rate = 220, s2 = 10, s3 = 40, s4 = 30)
 ###############################################################################
 # Animation function
 
 def update1(frame_number, mat, A, convolve):
     """Next frame update for animation without ECG"""
-    if A.model == 1:
-        A.CMP2D_timestep_ani1()
-    else:
-        A.CMP2D_timestep_ani2()
+    #if A.model == 1:
+    #    A.CMP2D_timestep_ani1()
+    #else:
+    #A.sinus_rhythm()
+    print(A.t)
+    #print(A.phases[0])
+    if A.t == 230:
+        ani.event_source.stop()
+        A.change_connections(1,1)
+        ani.event_source.start()
+    A.cmp_animation()
     ###### WITH CONVOLUTION ######
     if convolve == True:
         convolution = gaussian_filter(A.phases.reshape([A.L, A.L]), sigma=1,
@@ -42,15 +49,18 @@ def update1(frame_number, mat, A, convolve):
 
 def update2(frame_number,collection,A,convolve):
     """Next frame update for animation without ECG"""
-    if A.model == 1:
-        A.CMP2D_timestep_ani1()
-    else:
-        A.CMP2D_timestep_ani2()
+    if A.t % 400 == 0:
+        ani.event_source.stop()
+        A.change_connections(A.nu_para+0.005,A.nu_trans+0.005)
+        ani.event_source.start()
+        print(A.t)
+        print(A.nu_para)
+    A.cmp_animation()
     
     # WITH CONVOLUTION
     if convolve == True:
         convolution = gaussian_filter(A.phases.reshape([A.L, A.L]), sigma = 1.2,
-                                  mode = ('wrap', 'constant'), cval = A.rp)
+                                  mode = ('wrap', 'constant'), cval = A.rp/2)
     
         data = np.ravel(convolution)
         collection.set_array(data)
@@ -58,7 +68,7 @@ def update2(frame_number,collection,A,convolve):
     # WITHOUT CONVOLUTION
     else:
         collection.set_array(np.array(A.phases))
-    
+    ax.set_title('nu = %f' % A.nu_para, fontsize = 28)
     return ax,
 
 ###############################################################################
@@ -115,10 +125,11 @@ if A.hexagonal == True:
     
     ax.axis('equal')
     ax.set_axis_off()
+    #ax.set_title('nu = %f' % A.nu_para)
     ani = animation.FuncAnimation(fig1, update2, frames = A.tot_time
                                    ,fargs = (collection, A, convolve), 
                                    interval= 5, repeat = None)
     plt.axis([-1, A.L + 1, -1, A.L + 1])
 
 
-#ani.save('v_0.60_thresh_1_p_0.75_1_2_4_4.mp4', fps = 10, dpi = 250, bitrate = 5000)
+ani.save('nu_increase_L100_rp30_t0.5_p0.25_sc1_sp2.mp4', fps = 30, dpi = 250, bitrate = 5000)
