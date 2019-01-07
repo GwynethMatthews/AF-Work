@@ -349,7 +349,7 @@ class DysfuncModel(Atrium):
 
 class SourceSinkModel(Atrium):
     
-    def __init__(self, threshold=0.5, hexagonal=False, L=200, rp=30, tot_time=10**6, nu_para=0.6, nu_trans=0.6,
+    def __init__(self, threshold=0.5, hexagonal=False, L=100, rp=30, tot_time=10**6, nu_para=0.6, nu_trans=0.6,
                  pace_rate=220, p_nonfire=0.25, seed_connections=1, seed_prop=4):
         super(SourceSinkModel, self).__init__(hexagonal, L, rp, tot_time, nu_para, nu_trans, pace_rate, p_nonfire, seed_connections, seed_prop)       # Calls Atrium init function
 
@@ -392,7 +392,7 @@ class SourceSinkModel(Atrium):
 
     def find_resting_neighbours(self, excited_cells):
         ###### NOTE: replaced line 387 with 388 for speed
-        #neighbours_list = [[y for y in self.neighbour_list[i] if self.resting[int(y)]] for i in excited_cells]
+        # neighbours_list = [[y for y in self.neighbour_list[i] if self.resting[int(y)]] for i in excited_cells]
         neighbours_list = [j[self.resting[j]] for j in self.neighbour_list[excited_cells]]
         
         resting_neighbours = list(map(len, neighbours_list))
@@ -412,5 +412,5 @@ class SourceSinkModel(Atrium):
         ###### NOTE: Removed the use of the excite_cells() to save a tiny amount of time
         self.to_be_excited[miss_thresh_but_still_excite] = True
         self.to_be_excited[hit_thresh_so_excite] = True
-        #self.excite_cells(miss_thresh_but_still_excite)
-        #self.excite_cells(hit_thresh_so_excite)
+        # self.excite_cells(miss_thresh_but_still_excite)
+        # self.excite_cells(hit_thresh_so_excite)
