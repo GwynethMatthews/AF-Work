@@ -211,9 +211,9 @@ class Atrium:
 
     def AF_checker(self, excited_cells):
         a = np.mean(self.excitation_rate[excited_cells])
-
+        #beat = np.mean(self.excitation_rate[self.last_col])
         # if self.t > self.pace_rate:
-        if a < self.pace_rate * 0.9 or a > self.pace_rate * 1.5:
+        if a < self.pace_rate * 0.9: # and beat <= self.pace_rate * 1.5:
             self.AF = True
             self.t_AF += 1
             #print(self.AF)
@@ -369,16 +369,17 @@ class SourceSinkModel(Atrium):
         #######             that many times e.g if cell 1 is excited and has 3 resting
         #######             neighbours 3 appears 3 times if it's 4 4 appears 4 times
         #######       current_to_each_cell then gets inversed so 2 become 0.5, 3 becomes 0.333, etc
-        concatenated_neighbours_list = np.concatenate(neighbours_list)
-        
-        current_to_each_cell = np.concatenate([[i]*i for i in resting_neighbours])
-        current_to_each_cell = 1./current_to_each_cell
-        
-        inward_current[concatenated_neighbours_list] += current_to_each_cell
-#        for i in neighbours_list:
-#
-#            if len(i) != 0:
-#                inward_current[i] += float(1)/ len(i)
+#        concatenated_neighbours_list = np.concatenate(neighbours_list)
+#        
+#        current_to_each_cell = np.concatenate([[i]*i for i in resting_neighbours])
+#        current_to_each_cell = 1./current_to_each_cell
+#        
+#        inward_current[concatenated_neighbours_list] += current_to_each_cell
+#        neighbours_list = neighbours_list[resting_neighbours > 0]
+        for i in neighbours_list:
+
+            if len(i) != 0:
+                inward_current[i] += float(1)/ len(i)
                 
         return inward_current
 
@@ -386,8 +387,8 @@ class SourceSinkModel(Atrium):
         possible_excited = receive_current[inward_current[receive_current] < self.threshold]
 
         miss_threshold_fire_rand_nums = np.random.rand(len(possible_excited))
-        possible_excited = possible_excited[miss_threshold_fire_rand_nums > self.p_nonfire]  # Fire if over p_nonfire
-        
+        possible_excited = possible_excited[miss_threshold_fire_rand_nums > self.p_nonfire**(1 + 10*(self.threshold - inward_current[possible_excited]))]  # Fire if over p_nonfire
+        #print(self.p_nonfire**(1.5*(inward_current[possible_excited])))
         return possible_excited
 
     def find_resting_neighbours(self, excited_cells):
