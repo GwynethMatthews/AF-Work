@@ -54,10 +54,8 @@ class Atrium:
         # All dummy variables that get overridden in function
         self.excitation_rate = None
         self.last_excitation = None
-<<<<<<< HEAD
         self.number_of_excitations = None
-=======
->>>>>>> 9ef767596c9c4cc3e3587084cba1fb3187197814
+
         self.AF = None
         self.sources = None
         self.t = None
@@ -86,10 +84,7 @@ class Atrium:
     def set_AF_measuring_vars(self):
         self.excitation_rate = np.zeros(self.L**2, dtype=int)
         self.last_excitation = np.full((self.L**2), fill_value=-self.pace_rate)
-<<<<<<< HEAD
         self.number_of_excitations = np.zeros(self.L**2, dtype=int)
-=======
->>>>>>> 9ef767596c9c4cc3e3587084cba1fb3187197814
         self.AF = False
         self.sources = []
         self.t = 0
@@ -216,7 +211,6 @@ class Atrium:
     def excitation_tracker(self, excited_cells):
         self.excitation_rate[excited_cells] = self.t - self.last_excitation[excited_cells]
         self.last_excitation[excited_cells] = self.t
-<<<<<<< HEAD
         self.number_of_excitations[excited_cells] += 1 
 
     def AF_checker(self, excited_cells):
@@ -233,21 +227,6 @@ class Atrium:
     
             else:
                 self.AF = False
-=======
-
-    def AF_checker(self, excited_cells):
-        a = np.mean(self.excitation_rate[excited_cells])
-        #beat = np.mean(self.excitation_rate[self.last_col])
-        # if self.t > self.pace_rate:
-        if a < self.pace_rate * 0.9: # and beat <= self.pace_rate * 1.5:
-            self.AF = True
-            self.t_AF += 1
-            #print(self.AF)
-            #print(self.t)
-
-        else:
-            self.AF = False
->>>>>>> 9ef767596c9c4cc3e3587084cba1fb3187197814
 
     def excite_cells(self, excited_cells):
         self.to_be_excited[excited_cells] = True
@@ -289,19 +268,12 @@ class Atrium:
         
         self.phases[self.to_be_excited] = 0  # Needed for animation
         self.phases[~self.resting] += 1
-<<<<<<< HEAD
-        self.phases[self.resting] == 100
-=======
->>>>>>> 9ef767596c9c4cc3e3587084cba1fb3187197814
 
         self.cmp_timestep()
 
     def cmp_full(self):
-<<<<<<< HEAD
-        #np.random.seed(self.seed_prop)   # Sets seed for all dysfunctional firings etc.
-=======
         np.random.seed(self.seed_prop)   # Sets seed for all dysfunctional firings etc.
->>>>>>> 9ef767596c9c4cc3e3587084cba1fb3187197814
+
         
         while self.t < self.tot_time:
             self.cmp_timestep()
@@ -312,16 +284,13 @@ class Atrium:
         self.nu_trans = new_nu_trans
         self.nu_para = new_nu_para
         self.create_neighbours()
-<<<<<<< HEAD
     
     def change_rp(self, new_rp):
         #for i in range((new_rp-self.rp)):
         self.states.extend([[]]*(new_rp-self.rp))
         print('here')
         self.rp = new_rp
-=======
 
->>>>>>> 9ef767596c9c4cc3e3587084cba1fb3187197814
 
 class DysfuncModel(Atrium):
     
@@ -393,13 +362,9 @@ class DysfuncModel(Atrium):
 
 class SourceSinkModel(Atrium):
     
-<<<<<<< HEAD
     def __init__(self, threshold=0.75, hexagonal=False, L=100, rp=30, tot_time=10**6, nu_para=0.6, nu_trans=0.6,
                  pace_rate=220, p_nonfire=0.75, seed_connections=1, seed_prop=4):
-=======
-    def __init__(self, threshold=0.5, hexagonal=False, L=100, rp=30, tot_time=10**6, nu_para=0.6, nu_trans=0.6,
-                 pace_rate=220, p_nonfire=0.25, seed_connections=1, seed_prop=4):
->>>>>>> 9ef767596c9c4cc3e3587084cba1fb3187197814
+
         super(SourceSinkModel, self).__init__(hexagonal, L, rp, tot_time, nu_para, nu_trans, pace_rate, p_nonfire, seed_connections, seed_prop)       # Calls Atrium init function
 
         self.threshold = threshold
@@ -434,18 +399,10 @@ class SourceSinkModel(Atrium):
 
     def cells_miss_threshold(self, receive_current, inward_current):
         possible_excited = receive_current[inward_current[receive_current] < self.threshold]
-<<<<<<< HEAD
-        #print(possible_excited)
-        miss_threshold_fire_rand_nums = np.random.rand(len(possible_excited))
-        possible_excited = possible_excited[miss_threshold_fire_rand_nums > self.p_nonfire]#**(1 + self.threshold - inward_current[possible_excited])]  # Fire if over p_nonfire
-        #print(self.p_nonfire**(1.5*(inward_current[possible_excited])))
-        #print(inward_current[possible_excited][inward_current[possible_excited]< 0.33])
-=======
 
         miss_threshold_fire_rand_nums = np.random.rand(len(possible_excited))
         possible_excited = possible_excited[miss_threshold_fire_rand_nums > self.p_nonfire**(1 + 10*(self.threshold - inward_current[possible_excited]))]  # Fire if over p_nonfire
-        #print(self.p_nonfire**(1.5*(inward_current[possible_excited])))
->>>>>>> 9ef767596c9c4cc3e3587084cba1fb3187197814
+
         return possible_excited
 
     def find_resting_neighbours(self, excited_cells):

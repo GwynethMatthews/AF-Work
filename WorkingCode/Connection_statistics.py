@@ -1,14 +1,8 @@
-<<<<<<< HEAD
 import numpy as np
 import pickle as pickle
 
-class Atrium:
-=======
-
-import numpy as np
 
 class Atrium():
->>>>>>> 9ef767596c9c4cc3e3587084cba1fb3187197814
     """Creates the myocardium's structure.
     hexagonal: False = Square Lattice, True = Hexagonal Lattice
     model: 1 = standard CMP model, 2 = source-sink model
@@ -16,32 +10,14 @@ class Atrium():
     v_para: nu parallel 
     v_tran_1: nu transfers in square lattice or nu of main diagonal in hexagonal
     v_tran_2: nu of minor diagonal in hexagonal
-<<<<<<< HEAD
     d: fraction of dysfunctional cells in standard model
     e: fraction of time that dysfunctional cells do not fire
-=======
->>>>>>> 9ef767596c9c4cc3e3587084cba1fb3187197814
     threshold: value equal to and above which cells always excite in the source-sink model
     p: the probability with which cells under the threshold excite in the source-sink model
     rp: refractory period
     tot_time: total time of simulation
     pace_rate: rate of pacemaker rhythm
-<<<<<<< HEAD
-    s1: seed for dysfunctional cell selection
-    s2: seed for transverse connection selection
-    s3: seed for parallel connection selection
-    s4: seed for cell firing selection (e or p)
-    """
-    def __init__(self, hexagonal=False, L=200, rp=50, tot_time=10**6, nu_para=0.6, nu_trans=0.6,
-                 pace_rate=220, p_nonfire=0.25, seed_connections=1, seed_prop=4):
-        global inward_current
-        # System Parameters
-        self.hexagonal = hexagonal
-        self.L = L
-        self.nu_para = nu_para
-        self.nu_trans = nu_trans
-        self.connections = []    
-=======
+
     s1: seed for transverse connection selection
     s2: seed for parallel connection selection
     s3: seed for cell firing selection (e or p)
@@ -60,21 +36,12 @@ class Atrium():
         self.transverse_prob_r = v_tran_2
         self.parallel_prob = v_para  
         
-    
->>>>>>> 9ef767596c9c4cc3e3587084cba1fb3187197814
         self.tot_time = tot_time
         self.rp = rp        
         self.pace_rate = pace_rate
         self.pace = np.arange(0, tot_time, pace_rate)
         
-<<<<<<< HEAD
         self.p_nonfire = p_nonfire
-
-        # System cell positions
-        self.index = np.arange(0, L * L)   # cell positions in each array
-        self.position = self.index.reshape(L, L)
-        inward_current = np.zeros_like(self.index)
-=======
         self.threshold = threshold
         self.p = p
             
@@ -82,12 +49,10 @@ class Atrium():
         # System cell positions
         self.index = np.arange(0, L*L) # cell positions in each array
         self.position = self.index.reshape(L, L)
->>>>>>> 9ef767596c9c4cc3e3587084cba1fb3187197814
 
         self.first_col = np.arange(0, L * L, L)
         self.not_first_col = self.index[self.index % L != 0]
         self.last_col = np.arange(0, L * L, L) + L - 1
-<<<<<<< HEAD
         self.last_row = np.arange((self.L * self.L) - self.L, self.L * self.L)
         
         # System seeds
