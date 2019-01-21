@@ -183,11 +183,6 @@ class Atrium():
                 inward_current[np.array(neighbours_list[i],dtype = int)] += float(1) / np.array(resting_neighbours[i])
         
         receive_current = self.index[inward_current > 0]
-<<<<<<< HEAD
-        print(inward_current)
-=======
-        
->>>>>>> 9ef767596c9c4cc3e3587084cba1fb3187197814
         get_excited = receive_current[inward_current[receive_current] >= self.threshold]
         
         possible_excited = receive_current[inward_current[receive_current] < self.threshold]
