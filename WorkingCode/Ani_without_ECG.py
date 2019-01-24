@@ -5,6 +5,7 @@ from scipy.ndimage import gaussian_filter
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import matplotlib.patches as mpat
+
 from matplotlib import collections
 
 
@@ -24,19 +25,18 @@ nu = 0.65
 A = AC.SourceSinkModel(hexagonal = True, pace_rate = 180, threshold = 1, p_nonfire = 0.35, L = 100, rp = 30, tot_time = 80000, nu_para=nu, nu_trans=nu,seed_connections=seed1, seed_prop=seed2)
 
 
+
 ###############################################################################
 # Animation function
 
 
 def update_square(frame_number, mat, A, convolve):
     """Next frame update for animation without ECG"""
-    # if A.model == 1:
-    #    A.CMP2D_timestep_ani1()
-    # else:
-    # A.sinus_rhythm()
-    print(A.t)
+
+    #print(A.t)
     # print(A.phases[0])
-    if A.t == 1000:
+
+    if A.t % 100 == 0:
         ani.event_source.stop()
         A.change_connections(1, 1)
         ani.event_source.start()
@@ -63,22 +63,47 @@ def update_square(frame_number, mat, A, convolve):
 def update_hex(frame_number, collection, A, convolve):    # Frame number passed as default so needed
     """Next frame update for animation without ECG"""
 
-    if A.t == 600:
-        ani.event_source.stop()
-        A.change_rp(10)
-        ani.event_source.start()
-        
-    if A.t == 700:
-        A.change_connections(0.4)
-        #print(A.t)
-        #print(A.nu_para)
-        
     A.cmp_animation()
+
+#    if A.t in [2000,12000,22000,32000,42000]:
+#        A.change_connections(A.nu_para + 0.1, A.nu_trans + 0.1)
+#        
+    if A.t == 300:
+        A.tot_time = A.t + 1400
+        A.cmp_full()
+        A.tot_time = 113500
+#    if A.t in [2300,12300,22300,32300]: #,42300]:
+#        A.tot_time = A.t + 9600
+#        A.cmp_full()
+#        A.tot_time = 113500
+    if A.t == 5700:
+        A.tot_time = 62000
+        A.cmp_full()
+        A.tot_time = 113500        
+    if A.t == 2200:
+        A.tot_time = 4800
+        A.cmp_full()
+#        A.tot_time = 113500
+
+    if A.t == 5000:
+        A.change_connections(A.nu_para + 0.4, A.nu_trans + 0.4)
+  
+#    if A.t == 12000:
+#        A.change_connections(A.nu_para + 0.1, A.nu_trans + 0.1)
+#    
+#    if A.t == 22000:
+#        A.change_connections(A.nu_para + 0.1, A.nu_trans + 0.1)
+    if A.t == 63000:
+        print('here')
+    #A.cmp_animation()
+    #print(A.t_AF)
     
     # WITH CONVOLUTION
-    if convolve == True:
-        convolution = gaussian_filter(A.phases.reshape([A.L, A.L]), sigma = 0.8,
-                                  mode = ('wrap', 'nearest'), cval = A.rp)
+
+    if convolve:
+        convolution = gaussian_filter(A.phases.reshape([A.L, A.L]), sigma=1.1,
+                                      mode=('wrap', 'nearest'))
+
     
         data = np.ravel(convolution)
         collection.set_array(data)
@@ -87,7 +112,9 @@ def update_hex(frame_number, collection, A, convolve):    # Frame number passed 
     else:
         collection.set_array(np.array(A.phases))
 
-    ax.set_title('nu = %0.3f, refractory period = %i' %(A.nu_para, A.rp), fontsize = 18)
+
+    ax.set_title('refractory period = %i, threshold = %0.2f, p not fire = %0.2f, \nseed connection = %i, seed propagation = %i, \nnu = %0.3f, t = %i' % (A.rp, A.threshold, A.p_nonfire, A.seed_connections, A.seed_prop, A.nu_para, A.t), fontsize=20)
+    ax.title.set_position([0.5, 0.85])
 
     return ax,
 
@@ -95,14 +122,16 @@ def update_hex(frame_number, collection, A, convolve):    # Frame number passed 
 
 # Running the Animation
 
-
 if not A.hexagonal:
     np.random.seed(A.seed_prop)
     
 
-    fig1 = plt.figure(figsize = [10,10])
+
+    fig1 = plt.figure(figsize=[5, 5])
 
     ax = fig1.subplots(1, 1)
+    ax.tight_layout()
+
     mat1 = ax.matshow(A.phases.reshape([A.L, A.L]), cmap=plt.cm.jet_r)
     mat1.set_clim(0, A.rp)
     ax.set_axis_off()
@@ -116,8 +145,13 @@ if not A.hexagonal:
 if A.hexagonal:
     np.random.seed(A.seed_prop)
 
+
     fig1 = plt.figure(figsize = [7,7])
     ax = fig1.subplots(1,1)
+
+    fig1.tight_layout()
+
+
     patches = []
     offsets = []
     a = np.tan(np.pi/6)*0.5
@@ -142,7 +176,8 @@ if A.hexagonal:
     for k in offsets:
         patches.extend([mpat.RegularPolygon(k, 6, radius=0.5/np.cos(np.pi/6))])
         
-    collection = collections.PatchCollection(patches, cmap=plt.cm.jet_r)
+    collection = collections.PatchCollection(patches, cmap= plt.cm.jet_r)
+
     ax.add_collection(collection, autolim=True)
 
     #collection.set_edgecolor('face')
@@ -159,5 +194,5 @@ if A.hexagonal:
     plt.show()
 
 
+ani.save('Returns to SR, jump from 0.58 to 0.98 at 5000 (video2).mp4', fps=30, dpi=250, bitrate=5000)
 
-#ani.save('nu-%f_s1-%i_s2-%i_jump_up.mp4' %(nu, seed1, seed2), fps = 30, dpi = 250, bitrate = 5000)
