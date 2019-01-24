@@ -8,21 +8,23 @@ import matplotlib.patches as mpat
 
 from matplotlib import collections
 
+
 plt.rcParams['animation.ffmpeg_path']
 
-###############################################################################
 
 # Initiating the Atrium
 convolve = True
 
+# AC.Atrium(hexagonal=False, L=200, rp=50, tot_time=10**6, nu_para=0.6, nu_trans=0.6,
+#                 pace_rate=220, p_nonfire=0.05, seed_connections=1, seed_prop=4)
 
-A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.25, L=100, 
-                       tot_time=35000, nu_para=0.58, rp = 30,
-                       nu_trans=0.58, seed_connections=1229029224, seed_prop=2080410907)
+seed1 = 151436245
+seed2 = 234
+nu = 0.65
 
-# A = AC.DysfuncModel(hexagonal = True, L = 100,tot_time = 10**6)
-#A.cmp_full()
-#A.tot_time = 10
+A = AC.SourceSinkModel(hexagonal = True, pace_rate = 180, threshold = 1, p_nonfire = 0.35, L = 100, rp = 30, tot_time = 80000, nu_para=nu, nu_trans=nu,seed_connections=seed1, seed_prop=seed2)
+
+
 
 ###############################################################################
 # Animation function
@@ -45,8 +47,9 @@ def update_square(frame_number, mat, A, convolve):
 
     if convolve:
         convolution = gaussian_filter(A.phases.reshape([A.L, A.L]), sigma=1,
-                                  mode=('wrap', 'constant'))
+                                  mode=('wrap', 'nearest'))
         
+
         mat.set_data(convolution)
     
     ###### WITHOUT CONVOLUTION ######
@@ -59,6 +62,7 @@ def update_square(frame_number, mat, A, convolve):
 
 def update_hex(frame_number, collection, A, convolve):    # Frame number passed as default so needed
     """Next frame update for animation without ECG"""
+
     A.cmp_animation()
 
 #    if A.t in [2000,12000,22000,32000,42000]:
@@ -95,6 +99,7 @@ def update_hex(frame_number, collection, A, convolve):    # Frame number passed 
     #print(A.t_AF)
     
     # WITH CONVOLUTION
+
     if convolve:
         convolution = gaussian_filter(A.phases.reshape([A.L, A.L]), sigma=1.1,
                                       mode=('wrap', 'nearest'))
@@ -106,6 +111,7 @@ def update_hex(frame_number, collection, A, convolve):    # Frame number passed 
     # WITHOUT CONVOLUTION
     else:
         collection.set_array(np.array(A.phases))
+
 
     ax.set_title('refractory period = %i, threshold = %0.2f, p not fire = %0.2f, \nseed connection = %i, seed propagation = %i, \nnu = %0.3f, t = %i' % (A.rp, A.threshold, A.p_nonfire, A.seed_connections, A.seed_prop, A.nu_para, A.t), fontsize=20)
     ax.title.set_position([0.5, 0.85])
@@ -120,7 +126,9 @@ if not A.hexagonal:
     np.random.seed(A.seed_prop)
     
 
+
     fig1 = plt.figure(figsize=[5, 5])
+
     ax = fig1.subplots(1, 1)
     ax.tight_layout()
 
@@ -137,10 +145,12 @@ if not A.hexagonal:
 if A.hexagonal:
     np.random.seed(A.seed_prop)
 
-    fig1 = plt.figure(figsize=[15, 15])
 
-    ax = fig1.subplots() #(1, 1)
+    fig1 = plt.figure(figsize = [7,7])
+    ax = fig1.subplots(1,1)
+
     fig1.tight_layout()
+
 
     patches = []
     offsets = []
@@ -169,9 +179,10 @@ if A.hexagonal:
     collection = collections.PatchCollection(patches, cmap= plt.cm.jet_r)
 
     ax.add_collection(collection, autolim=True)
-    # collection.set_edgecolor('face')
-    collection.set_clim(0, A.rp)
-    
+
+    #collection.set_edgecolor('face')
+    collection.set_clim(0, 100)
+
     ax.axis('equal')
     ax.set_axis_off()
     # ax.set_title('nu = %f' % A.nu_para)
