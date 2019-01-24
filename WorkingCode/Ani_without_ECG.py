@@ -16,17 +16,16 @@ plt.rcParams['animation.ffmpeg_path']
 convolve = True
 
 
-A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.25, L=100, 
-                       tot_time=35000, nu_para=0.58, rp = 30,
-                       nu_trans=0.58, seed_connections=1229029224, seed_prop=2080410907)
+A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.01, L=100, 
+                       tot_time=10500, nu_para=0.4, rp = 30,
+                       nu_trans=0.4, seed_connections=1626465539, seed_prop=1652879485)
 
-# A = AC.DysfuncModel(hexagonal = True, L = 100,tot_time = 10**6)
+#A = AC.DysfuncModel(hexagonal = True, L = 100,tot_time = 10**6)
 #A.cmp_full()
 #A.tot_time = 10
 
 ###############################################################################
 # Animation function
-
 
 def update_square(frame_number, mat, A, convolve):
     """Next frame update for animation without ECG"""
@@ -60,43 +59,58 @@ def update_square(frame_number, mat, A, convolve):
 def update_hex(frame_number, collection, A, convolve):    # Frame number passed as default so needed
     """Next frame update for animation without ECG"""
     A.cmp_animation()
-
-#    if A.t in [2000,12000,22000,32000,42000]:
-#        A.change_connections(A.nu_para + 0.1, A.nu_trans + 0.1)
-#        
-    if A.t == 300:
-        A.tot_time = A.t + 1400
-        A.cmp_full()
-        A.tot_time = 113500
-#    if A.t in [2300,12300,22300,32300]: #,42300]:
-#        A.tot_time = A.t + 9600
+    
+#    if A.t == 1000: #,22000,42000,62000,82000]:
+#        A.change_connections(A.nu_para + 0.6, A.nu_trans + 0.6)
+#        print('here')
+#    if A.t == 1200:
+#        print('here')
+#        A.tot_time = 233500
 #        A.cmp_full()
-#        A.tot_time = 113500
-    if A.t == 5700:
-        A.tot_time = 62000
+#        print('here')
+#        A.tot_time = 313500
+############################################################
+    if A.t % 150 == 0 and A.nu_para < 1: #,22000,42000,62000,82000]:
+        A.change_connections(A.nu_para + 0.01, A.nu_trans + 0.01)
+        print(A.nu_para)
+#        
+#    if A.t in [1000,21000,41000,61000]:
+#        print(A.t)
+#        A.tot_time = A.t + 18950
+#        while A.t < A.tot_time:
+#            A.cmp_timestep()
+#            if A.t % 150 == 0 and A.nu_para < 1: #,22000,42000,62000,82000]:
+#                 A.change_connections(A.nu_para + 0.01, A.nu_trans + 0.01)
+#            
+#
+#        A.tot_time = 313500
+#
+#
+#    if A.t == 81000:
+#        A.tot_time = 110000
+#        while A.t < A.tot_time:
+#            A.cmp_timestep()
+#            if A.t % 2000 == 0 and A.nu_para < 1: #,22000,42000,62000,82000]:
+#                A.change_connections(A.nu_para + 0.01, A.nu_trans + 0.01)
+#        A.tot_time = 313500
+#        
+    if A.t == 9200:
+        A.tot_time = 279000
         A.cmp_full()
-        A.tot_time = 113500        
-    if A.t == 2200:
-        A.tot_time = 4800
-        A.cmp_full()
-#        A.tot_time = 113500
-
-    if A.t == 5000:
-        A.change_connections(A.nu_para + 0.4, A.nu_trans + 0.4)
-  
-#    if A.t == 12000:
-#        A.change_connections(A.nu_para + 0.1, A.nu_trans + 0.1)
-#    
-#    if A.t == 22000:
-#        A.change_connections(A.nu_para + 0.1, A.nu_trans + 0.1)
-    if A.t == 63000:
-        print('here')
+        A.tot_time = 313500
+#        
+#    if A.t == 230000:
+#        print('here')
+#        
+        
+###########################################        
+        
     #A.cmp_animation()
     #print(A.t_AF)
     
     # WITH CONVOLUTION
     if convolve:
-        convolution = gaussian_filter(A.phases.reshape([A.L, A.L]), sigma=1.1,
+        convolution = gaussian_filter(A.phases.reshape([A.L, A.L]), sigma=1.2,
                                       mode=('wrap', 'nearest'))
 
     
@@ -177,11 +191,11 @@ if A.hexagonal:
     # ax.set_title('nu = %f' % A.nu_para)
     ani = animation.FuncAnimation(fig1, update_hex, frames=A.tot_time,
                                   fargs=(collection, A, convolve),
-                                  interval=5, repeat=None)
+                                  interval=100, repeat=None)
 
     plt.axis([-1, A.L + 1, -1, A.L + 1])
     plt.show()
 
 
-ani.save('Returns to SR, jump from 0.58 to 0.98 at 5000 (video2).mp4', fps=30, dpi=250, bitrate=5000)
-
+#ani.save('increase of nu in steps of 0.01 every 100 (p non fire is pinward_current).mp4', fps=30, dpi=250, bitrate=5000)
+ani.save('Returns to SR, increase of nu in steps of 0.01 every 150 (p non fire is pinward_current.mp4', fps=30, dpi=250, bitrate=5000)
