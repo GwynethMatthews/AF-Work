@@ -4,7 +4,6 @@ import sys
 import Atrium_Final as AF
 job_number = int(sys.argv[1])
 
-
 # parameters array of [v,t,p] of length 60, i th ejob variable
 input_param = np.load('parameters.npy')
 input_seeds = np.load('seeds.npy')

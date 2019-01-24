@@ -54,6 +54,8 @@ class Atrium:
         # All dummy variables that get overridden in function
         self.excitation_rate = None
         self.last_excitation = None
+        self.number_of_excitations = None
+
         self.AF = None
         self.sources = None
         self.t = None
@@ -82,6 +84,7 @@ class Atrium:
     def set_AF_measuring_vars(self):
         self.excitation_rate = np.zeros(self.L**2, dtype=int)
         self.last_excitation = np.full((self.L**2), fill_value=-self.pace_rate)
+        self.number_of_excitations = np.zeros(self.L**2, dtype=int)
         self.AF = False
         self.sources = []
         self.t = 0
@@ -208,19 +211,22 @@ class Atrium:
     def excitation_tracker(self, excited_cells):
         self.excitation_rate[excited_cells] = self.t - self.last_excitation[excited_cells]
         self.last_excitation[excited_cells] = self.t
+        self.number_of_excitations[excited_cells] += 1 
 
     def AF_checker(self, excited_cells):
-        a = np.mean(self.excitation_rate[excited_cells])
+        b = self.excitation_rate[excited_cells[self.number_of_excitations[excited_cells] > 1]]
+        if len(b) > 0:
+            a = np.mean(b)
 
-        # if self.t > self.pace_rate:
-        if a < self.pace_rate * 0.9 or a > self.pace_rate * 1.5:
-            self.AF = True
-            self.t_AF += 1
-            #print(self.AF)
-            #print(self.t)
 
-        else:
-            self.AF = False
+            if a < self.pace_rate * 0.9: # and beat <= self.pace_rate * 1.5:
+                self.AF = True
+                self.t_AF += 1
+                ##print(self.AF)
+                #print(self.t)
+    
+            else:
+                self.AF = False
 
     def excite_cells(self, excited_cells):
         self.to_be_excited[excited_cells] = True
@@ -272,6 +278,7 @@ class Atrium:
 
     def cmp_full(self):
         np.random.seed(self.seed_prop)   # Sets seed for all dysfunctional firings etc.
+
         
         while self.t < self.tot_time:
             self.cmp_timestep()
@@ -282,6 +289,7 @@ class Atrium:
         self.nu_trans += increment
         self.nu_para += increment
         self.create_neighbours()
+
         
     def change_rp(self, increment):
         self.rp += increment
@@ -289,6 +297,12 @@ class Atrium:
         print(type(self.states))
         print(type(self.states[-1]))
         self.states += [[]] * increment
+    
+    def change_rp(self, new_rp):
+        #for i in range((new_rp-self.rp)):
+        self.states.extend([[]]*(new_rp-self.rp))
+        print('here')
+        self.rp = new_rp
 
 
 class DysfuncModel(Atrium):
@@ -361,8 +375,9 @@ class DysfuncModel(Atrium):
 
 class SourceSinkModel(Atrium):
     
-    def __init__(self, threshold=0.5, hexagonal=False, L=100, rp=30, tot_time=10**6, nu_para=0.6, nu_trans=0.6,
-                 pace_rate=220, p_nonfire=0.25, seed_connections=1, seed_prop=4):
+    def __init__(self, threshold=0.75, hexagonal=False, L=100, rp=30, tot_time=10**6, nu_para=0.6, nu_trans=0.6,
+                 pace_rate=220, p_nonfire=0.75, seed_connections=1, seed_prop=4):
+
         super(SourceSinkModel, self).__init__(hexagonal, L, rp, tot_time, nu_para, nu_trans, pace_rate, p_nonfire, seed_connections, seed_prop)       # Calls Atrium init function
 
         self.threshold = threshold
@@ -381,16 +396,17 @@ class SourceSinkModel(Atrium):
         #######             that many times e.g if cell 1 is excited and has 3 resting
         #######             neighbours 3 appears 3 times if it's 4 4 appears 4 times
         #######       current_to_each_cell then gets inversed so 2 become 0.5, 3 becomes 0.333, etc
-        concatenated_neighbours_list = np.concatenate(neighbours_list)
-        
-        current_to_each_cell = np.concatenate([[i]*i for i in resting_neighbours])
-        current_to_each_cell = 1./current_to_each_cell
-        
-        inward_current[concatenated_neighbours_list] += current_to_each_cell
-#        for i in neighbours_list:
-#
-#            if len(i) != 0:
-#                inward_current[i] += float(1)/ len(i)
+#        concatenated_neighbours_list = np.concatenate(neighbours_list)
+#        
+#        current_to_each_cell = np.concatenate([[i]*i for i in resting_neighbours])
+#        current_to_each_cell = 1./current_to_each_cell
+#        
+#        inward_current[concatenated_neighbours_list] += current_to_each_cell
+#        neighbours_list = neighbours_list[resting_neighbours > 0]
+        for i in neighbours_list:
+
+            if len(i) != 0:
+                inward_current[i] += float(1)/ len(i)
                 
         return inward_current
 
@@ -398,8 +414,8 @@ class SourceSinkModel(Atrium):
         possible_excited = receive_current[inward_current[receive_current] < self.threshold]
 
         miss_threshold_fire_rand_nums = np.random.rand(len(possible_excited))
-        possible_excited = possible_excited[miss_threshold_fire_rand_nums > self.p_nonfire]  # Fire if over p_nonfire
-        
+        possible_excited = possible_excited[miss_threshold_fire_rand_nums > self.p_nonfire**(1 + 10*(self.threshold - inward_current[possible_excited]))]  # Fire if over p_nonfire
+
         return possible_excited
 
     def find_resting_neighbours(self, excited_cells):
