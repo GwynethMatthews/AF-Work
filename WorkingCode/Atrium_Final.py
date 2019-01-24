@@ -259,9 +259,14 @@ class Atrium:
         ######  Put sinus_rhythm() above the phases as well so that first column 
         ######  is excited in the animation. Doesn't make a difference just sets the to_be_excited values to True twice
         self.sinus_rhythm()
-        
+
+        self.phases[self.resting] = 100
+        self.phases[~self.resting] = 70        
         self.phases[self.to_be_excited] = 0  # Needed for animation
-        self.phases[~self.resting] += 1
+        self.phases[self.states[0]] = 0
+        self.phases[self.states[1]] = 0
+        self.phases[self.states[2]] = 0
+        self.phases[self.states[3]] = 0
 
         self.cmp_timestep()
 
@@ -273,10 +278,17 @@ class Atrium:
             
         self.tot_AF += self.t_AF
     
-    def change_connections(self,new_nu_para,new_nu_trans):
-        self.nu_trans = new_nu_trans
-        self.nu_para = new_nu_para
+    def change_connections(self, increment):
+        self.nu_trans += increment
+        self.nu_para += increment
         self.create_neighbours()
+        
+    def change_rp(self, increment):
+        self.rp += increment
+        print(len(self.states))
+        print(type(self.states))
+        print(type(self.states[-1]))
+        self.states += [[]] * increment
 
 
 class DysfuncModel(Atrium):
