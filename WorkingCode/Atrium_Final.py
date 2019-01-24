@@ -214,6 +214,7 @@ class Atrium:
         self.number_of_excitations[excited_cells] += 1 
 
     def AF_checker(self, excited_cells):
+        
         b = self.excitation_rate[excited_cells[self.number_of_excitations[excited_cells] > 1]]
         if len(b) > 0:
             a = np.mean(b)
@@ -277,7 +278,7 @@ class Atrium:
         self.cmp_timestep()
 
     def cmp_full(self):
-        np.random.seed(self.seed_prop)   # Sets seed for all dysfunctional firings etc.
+       #np.random.seed(self.seed_prop)   # Sets seed for all dysfunctional firings etc.
 
         
         while self.t < self.tot_time:
@@ -414,8 +415,9 @@ class SourceSinkModel(Atrium):
         possible_excited = receive_current[inward_current[receive_current] < self.threshold]
 
         miss_threshold_fire_rand_nums = np.random.rand(len(possible_excited))
-        possible_excited = possible_excited[miss_threshold_fire_rand_nums > self.p_nonfire**(1 + 10*(self.threshold - inward_current[possible_excited]))]  # Fire if over p_nonfire
-
+        possible_excited = possible_excited[miss_threshold_fire_rand_nums > self.p_nonfire**(inward_current[possible_excited])]#(1 - (self.threshold - inward_current[possible_excited]))]  # Fire if over p_nonfire
+       # print(possible_excited)
+        
         return possible_excited
 
     def find_resting_neighbours(self, excited_cells):
