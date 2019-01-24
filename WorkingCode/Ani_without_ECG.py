@@ -6,15 +6,22 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import matplotlib.patches as mpat
 from matplotlib import collections
-plt.rcParams['animation.ffmpeg_path']
+#plt.rcParams['animation.ffmpeg_path']
 ###############################################################################
 # Initiating the Atrium
 convolve = True
-#AC.Atrium(hexagonal=False, L=200, rp=50, tot_time=10**6, nu_para=0.6, nu_trans=0.6,
+
+# AC.Atrium(hexagonal=False, L=200, rp=50, tot_time=10**6, nu_para=0.6, nu_trans=0.6,
 #                 pace_rate=220, p_nonfire=0.05, seed_connections=1, seed_prop=4)
-A = AC.SourceSinkModel(hexagonal = True, L = 100,tot_time = 10000,nu_para=0.395, nu_trans=0.395,seed_connections=1, seed_prop=2)
-#A = AC.DysfuncModel(hexagonal = True, L = 100,tot_time = 10**6)
-#A = AC.Atrium(hexagonal = True, model = 2, L = 100, v_para = 0.6,
+
+seed1 = 151436245
+seed2 = 234
+nu = 0.65
+
+A = AC.SourceSinkModel(hexagonal = True, pace_rate = 180, threshold = 1, p_nonfire = 0.35, L = 100, rp = 30, tot_time = 80000, nu_para=nu, nu_trans=nu,seed_connections=seed1, seed_prop=seed2)
+
+# A = AC.DysfuncModel(hexagonal = True, L = 100,tot_time = 10**6)
+# A = AC.Atrium(hexagonal = True, model = 2, L = 100, v_para = 0.6,
 #                     v_tran_1 = 0.6, v_tran_2 = 0.5,
 #                     threshold = 0.5, p = 0.25, rp = 50, tot_time = 10**6,
 #                     pace_rate = 220, s2 = 10, s3 = 40, s4 = 30)
@@ -36,7 +43,7 @@ def update1(frame_number, mat, A, convolve):
     A.cmp_animation()
     ###### WITH CONVOLUTION ######
     if convolve == True:
-        convolution = gaussian_filter(A.phases.reshape([A.L, A.L]), sigma=1,
+        convolution = gaussian_filter(A.phases.reshape([A.L, A.L]), sigma=1.5,
                                   mode = ('wrap', 'constant'))
         mat.set_data(convolution)
     
@@ -49,18 +56,22 @@ def update1(frame_number, mat, A, convolve):
 
 def update2(frame_number,collection,A,convolve):
     """Next frame update for animation without ECG"""
-    if A.t % 400 == 0:
+    if A.t == 600:
         ani.event_source.stop()
-        A.change_connections(A.nu_para+0.005,A.nu_trans+0.005)
+        A.change_rp(10)
         ani.event_source.start()
-        print(A.t)
-        print(A.nu_para)
+        
+    if A.t == 700:
+        A.change_connections(0.4)
+        #print(A.t)
+        #print(A.nu_para)
+        
     A.cmp_animation()
     
     # WITH CONVOLUTION
     if convolve == True:
-        convolution = gaussian_filter(A.phases.reshape([A.L, A.L]), sigma = 1.2,
-                                  mode = ('wrap', 'constant'), cval = A.rp/2)
+        convolution = gaussian_filter(A.phases.reshape([A.L, A.L]), sigma = 0.8,
+                                  mode = ('wrap', 'constant'), cval = A.rp)
     
         data = np.ravel(convolution)
         collection.set_array(data)
@@ -68,7 +79,7 @@ def update2(frame_number,collection,A,convolve):
     # WITHOUT CONVOLUTION
     else:
         collection.set_array(np.array(A.phases))
-    ax.set_title('nu = %f' % A.nu_para, fontsize = 28)
+    ax.set_title('nu = %0.3f, refractory period = %i' %(A.nu_para, A.rp), fontsize = 18)
     return ax,
 
 ###############################################################################
@@ -78,7 +89,7 @@ def update2(frame_number,collection,A,convolve):
 if A.hexagonal == False:
     np.random.seed(A.seed_prop)
     
-    fig1 = plt.figure(figsize = [15,15])
+    fig1 = plt.figure(figsize = [10,10])
     ax = fig1.subplots(1, 1)
     mat1 = ax.matshow(A.phases.reshape([A.L, A.L]), cmap=plt.cm.jet_r)
     mat1.set_clim(0, A.rp)
@@ -91,7 +102,7 @@ if A.hexagonal == False:
 if A.hexagonal == True:
     np.random.seed(A.seed_prop)
 
-    fig1 = plt.figure(figsize = [15,15])
+    fig1 = plt.figure(figsize = [7,7])
     ax = fig1.subplots(1,1)
     patches = []
     offsets = []
@@ -121,7 +132,7 @@ if A.hexagonal == True:
     collection = collections.PatchCollection(patches, cmap=plt.cm.jet_r)
     ax.add_collection(collection, autolim=True)
     #collection.set_edgecolor('face')
-    collection.set_clim(0, A.rp)
+    collection.set_clim(0, 100)
     
     ax.axis('equal')
     ax.set_axis_off()
@@ -132,4 +143,4 @@ if A.hexagonal == True:
     plt.axis([-1, A.L + 1, -1, A.L + 1])
 
 
-ani.save('nu_increase_L100_rp30_t0.5_p0.25_sc1_sp2.mp4', fps = 30, dpi = 250, bitrate = 5000)
+#ani.save('nu-%f_s1-%i_s2-%i_jump_up.mp4' %(nu, seed1, seed2), fps = 30, dpi = 250, bitrate = 5000)
