@@ -262,25 +262,20 @@ class Atrium:
         self.t += 1
 
     def cmp_animation(self):
-        # NOTE: I moved phases above sinus_rhythm, does it make a difference???
-        ######  Put sinus_rhythm() above the phases as well so that first column 
-        ######  is excited in the animation. Doesn't make a difference just sets the to_be_excited values to True twice
         self.sinus_rhythm()
 
-        self.phases[self.resting] = 100
-        self.phases[~self.resting] = 70        
+        self.phases[~self.resting] += 1       
         self.phases[self.to_be_excited] = 0  # Needed for animation
-        self.phases[self.states[0]] = 0
-        self.phases[self.states[1]] = 0
-        self.phases[self.states[2]] = 0
-        self.phases[self.states[3]] = 0
+#        self.phases[self.states[0]] = 0
+#        self.phases[self.states[1]] = 0
+#        self.phases[self.states[2]] = 0
+#        self.phases[self.states[3]] = 0
 
         self.cmp_timestep()
 
     def cmp_full(self):
        #np.random.seed(self.seed_prop)   # Sets seed for all dysfunctional firings etc.
-
-        
+   
         while self.t < self.tot_time:
             self.cmp_timestep()
             
@@ -290,17 +285,8 @@ class Atrium:
         self.nu_trans += increment
         self.nu_para += increment
         self.create_neighbours()
-
-        
-    def change_rp(self, increment):
-        self.rp += increment
-        print(len(self.states))
-        print(type(self.states))
-        print(type(self.states[-1]))
-        self.states += [[]] * increment
     
     def change_rp(self, new_rp):
-        #for i in range((new_rp-self.rp)):
         self.states.extend([[]]*(new_rp-self.rp))
         print('here')
         self.rp = new_rp
@@ -390,39 +376,34 @@ class SourceSinkModel(Atrium):
     def get_inward_current(self, neighbours_list,resting_neighbours):
         inward_current = np.zeros(self.L**2)
         
-        ####### NOTE: using concatenated_neighbours_list and current_to_each_cell
-        #######       instead of the for look because it's faster
-        #######       feel free to change the variable names:
-        #######       current_to_each_cell is an array of number of resting cells
-        #######             that many times e.g if cell 1 is excited and has 3 resting
-        #######             neighbours 3 appears 3 times if it's 4 4 appears 4 times
-        #######       current_to_each_cell then gets inversed so 2 become 0.5, 3 becomes 0.333, etc
-#        concatenated_neighbours_list = np.concatenate(neighbours_list)
-#        
-#        current_to_each_cell = np.concatenate([[i]*i for i in resting_neighbours])
-#        current_to_each_cell = 1./current_to_each_cell
-#        
-#        inward_current[concatenated_neighbours_list] += current_to_each_cell
-#        neighbours_list = neighbours_list[resting_neighbours > 0]
         for i in neighbours_list:
 
             if len(i) != 0:
                 inward_current[i] += float(1)/ len(i)
-                
+              
         return inward_current
 
-    def cells_miss_threshold(self, receive_current, inward_current):
+    def cells_miss_threshold_p_constant(self, receive_current, inward_current):
+        """Returns the cells which are excited even though they receive less than the threshold. 
+        Probability of excitation is constant"""
         possible_excited = receive_current[inward_current[receive_current] < self.threshold]
 
         miss_threshold_fire_rand_nums = np.random.rand(len(possible_excited))
-        possible_excited = possible_excited[miss_threshold_fire_rand_nums > self.p_nonfire**(inward_current[possible_excited])]#(1 - (self.threshold - inward_current[possible_excited]))]  # Fire if over p_nonfire
-       # print(possible_excited)
+        possible_excited = possible_excited[miss_threshold_fire_rand_nums > self.p_nonfire]
         
         return possible_excited
 
+    def cells_miss_threshold_as_a_function(self, receive_current, inward_current):
+        """Returns the cells which are excited even though they receive less than the threshold. 
+        Probability of excitation is 1 - (p_nonfire to the power of the current received)"""
+        possible_excited = receive_current[inward_current[receive_current] < self.threshold]
+
+        miss_threshold_fire_rand_nums = np.random.rand(len(possible_excited))
+        possible_excited = possible_excited[miss_threshold_fire_rand_nums > self.p_nonfire**(inward_current[possible_excited])]
+        
+        return possible_excited
+    
     def find_resting_neighbours(self, excited_cells):
-        ###### NOTE: replaced line 387 with 388 for speed
-        # neighbours_list = [[y for y in self.neighbour_list[i] if self.resting[int(y)]] for i in excited_cells]
         neighbours_list = [j[self.resting[j]] for j in self.neighbour_list[excited_cells]]
         
         resting_neighbours = list(map(len, neighbours_list))
@@ -435,12 +416,9 @@ class SourceSinkModel(Atrium):
         inward_current = self.get_inward_current(neighbours_list,resting_neighbours)  # amount of current received
         
         receive_current = self.index[inward_current > 0]  # Indices which receive any current from neighbours
-        
         hit_thresh_so_excite = receive_current[inward_current[receive_current] >= self.threshold]
-        miss_thresh_but_still_excite = self.cells_miss_threshold(receive_current, inward_current)
+        miss_thresh_but_still_excite = self.cells_miss_threshold_as_a_function(receive_current, inward_current)
 
-        ###### NOTE: Removed the use of the excite_cells() to save a tiny amount of time
         self.to_be_excited[miss_thresh_but_still_excite] = True
         self.to_be_excited[hit_thresh_so_excite] = True
-        # self.excite_cells(miss_thresh_but_still_excite)
-        # self.excite_cells(hit_thresh_so_excite)
+

@@ -1,5 +1,5 @@
 """Atrium is the normal model (both Sq and Hex)"""
-import Atrium_new_Jack as AC
+import Atrium_Final as AC
 import numpy as np
 from scipy.ndimage import gaussian_filter
 import matplotlib.pyplot as plt
@@ -11,24 +11,17 @@ from matplotlib import collections
 
 plt.rcParams['animation.ffmpeg_path']
 
-
+###############################################################################
 # Initiating the Atrium
 convolve = True
 
-# AC.Atrium(hexagonal=False, L=200, rp=50, tot_time=10**6, nu_para=0.6, nu_trans=0.6,
-#                 pace_rate=220, p_nonfire=0.05, seed_connections=1, seed_prop=4)
+seed1 = 1460926859
+seed2 = 623486203
+nu = 0.7
 
-seed1 = 151436245
-seed2 = 234
-nu = 0.65
-
-
-A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.01, L=100, 
-                       tot_time=10500, nu_para=nu, rp = 30,
-                       nu_trans=nu, seed_connections=seed1, seed_prop=seed2)
-
-#A = AC.DysfuncModel(hexagonal = True, L = 100,tot_time = 10**6)
-#A.cmp_full()
+A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.05, pace_rate= 220,
+                       L=100, tot_time= 1000, nu_para=nu, nu_trans=nu, rp = 30,
+                       seed_connections=seed1, seed_prop=seed2)
 
 
 ###############################################################################
@@ -44,13 +37,15 @@ def update_square(frame_number, mat, A, convolve):
         ani.event_source.stop()
         A.change_connections(1, 1)
         ani.event_source.start()
+    if A.t == 6000:
+            A.p_nonfire = 0
 
     A.cmp_animation()
 
     ###### WITH CONVOLUTION ######
 
     if convolve:
-        convolution = gaussian_filter(A.phases.reshape([A.L, A.L]), sigma=1,
+        convolution = gaussian_filter(A.phases.reshape([A.L, A.L]), sigma=1.4,
                                   mode=('wrap', 'nearest'))
         
 
@@ -68,55 +63,7 @@ def update_hex(frame_number, collection, A, convolve):    # Frame number passed 
     """Next frame update for animation without ECG"""
 
     A.cmp_animation()
-    
-#    if A.t == 1000: #,22000,42000,62000,82000]:
-#        A.change_connections(A.nu_para + 0.6, A.nu_trans + 0.6)
-#        print('here')
-#    if A.t == 1200:
-#        print('here')
-#        A.tot_time = 233500
-#        A.cmp_full()
-#        print('here')
-#        A.tot_time = 313500
-############################################################
-    if A.t % 150 == 0 and A.nu_para < 1: #,22000,42000,62000,82000]:
-        A.change_connections(A.nu_para + 0.01, A.nu_trans + 0.01)
-        print(A.nu_para)
-#        
-#    if A.t in [1000,21000,41000,61000]:
-#        print(A.t)
-#        A.tot_time = A.t + 18950
-#        while A.t < A.tot_time:
-#            A.cmp_timestep()
-#            if A.t % 150 == 0 and A.nu_para < 1: #,22000,42000,62000,82000]:
-#                 A.change_connections(A.nu_para + 0.01, A.nu_trans + 0.01)
-#            
-#
-#        A.tot_time = 313500
-#
-#
-#    if A.t == 81000:
-#        A.tot_time = 110000
-#        while A.t < A.tot_time:
-#            A.cmp_timestep()
-#            if A.t % 2000 == 0 and A.nu_para < 1: #,22000,42000,62000,82000]:
-#                A.change_connections(A.nu_para + 0.01, A.nu_trans + 0.01)
-#        A.tot_time = 313500
-#        
-    if A.t == 9200:
-        A.tot_time = 279000
-        A.cmp_full()
-        A.tot_time = 313500
-#        
-#    if A.t == 230000:
-#        print('here')
-#        
-        
-###########################################        
-        
-    #A.cmp_animation()
-    #print(A.t_AF)
-    
+
     # WITH CONVOLUTION
 
     if convolve:
@@ -132,7 +79,7 @@ def update_hex(frame_number, collection, A, convolve):    # Frame number passed 
         collection.set_array(np.array(A.phases))
 
 
-    ax.set_title('refractory period = %i, threshold = %0.2f, p not fire = %0.2f, \nseed connection = %i, seed propagation = %i, \nnu = %0.3f, t = %i' % (A.rp, A.threshold, A.p_nonfire, A.seed_connections, A.seed_prop, A.nu_para, A.t), fontsize=20)
+    ax.set_title('refractory period = %i, threshold = %0.2f, p not fire = %0.3f, \nseed connection = %i, seed propagation = %i, sigma = %0.1f \nnu = %0.3f, t = %i' % (A.rp, A.threshold, A.p_nonfire, A.seed_connections, A.seed_prop, 1.4, A.nu_para, A.t), fontsize=20)
     ax.title.set_position([0.5, 0.85])
 
     return ax,
@@ -165,7 +112,7 @@ if A.hexagonal:
     np.random.seed(A.seed_prop)
 
 
-    fig1 = plt.figure(figsize = [7,7])
+    fig1 = plt.figure(figsize = [15,15])
     ax = fig1.subplots(1,1)
 
     fig1.tight_layout()
@@ -200,18 +147,17 @@ if A.hexagonal:
     ax.add_collection(collection, autolim=True)
 
     #collection.set_edgecolor('face')
-    collection.set_clim(0, 100)
+    collection.set_clim(0, A.rp)
 
     ax.axis('equal')
     ax.set_axis_off()
     # ax.set_title('nu = %f' % A.nu_para)
     ani = animation.FuncAnimation(fig1, update_hex, frames=A.tot_time,
                                   fargs=(collection, A, convolve),
-                                  interval=100, repeat=None)
+                                  interval=50, repeat=None)
 
     plt.axis([-1, A.L + 1, -1, A.L + 1])
     plt.show()
 
 
-#ani.save('increase of nu in steps of 0.01 every 100 (p non fire is pinward_current).mp4', fps=30, dpi=250, bitrate=5000)
-#ani.save('Returns to SR, increase of nu in steps of 0.01 every 150 (p non fire is pinward_current.mp4', fps=30, dpi=250, bitrate=5000)
+#ani.save('Conduction block nu_0.5 p_0.25(p non fire is pinward_current).mp4', fps=25)
