@@ -8,32 +8,24 @@ import matplotlib.patches as mpat
 
 from matplotlib import collections
 
+plt.rcParams['animation.ffmpeg_path']
+
+###############################################################################
 # Initiating the Atrium
 convolve = True
 
-# AC.Atrium(hexagonal=False, L=200, rp=50, tot_time=10**6, nu_para=0.6, nu_trans=0.6,
-#                 pace_rate=220, p_nonfire=0.05, seed_connections=1, seed_prop=4)
+seed1 = 1460926859
+seed2 = 623486203
+nu = 0.7
 
-seed1 = 23774531
-seed2 = 543192322
-nu = 0.5
-
-#rands = np.random.randint(0, 10000000, (100, 2))
-#
-#for elem in rands:
-#    print('-------New heart-------')
-#    A = AC.SourceSinkModel(hexagonal = True, pace_rate = 220, threshold = 1, p_nonfire = 0.03, L = 100, rp = 30, tot_time = 40000, nu_para=nu, nu_trans=nu,seed_connections=elem[0], seed_prop=elem[1])
-#    A.cmp_full()
-#    print("AF time: ", A.tot_AF)
-#    print("seeds: ", elem[0], elem[1])
-
-A = AC.SourceSinkModel(hexagonal = True, pace_rate = 220, threshold = 1, p_nonfire = 0.05, L = 100, rp = 30, tot_time = 10000, nu_para=nu, nu_trans=nu,seed_connections=seed1, seed_prop=seed2)
+A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.05, pace_rate= 220,
+                       L=100, tot_time= 1000, nu_para=nu, nu_trans=nu, rp = 30,
+                       seed_connections=seed1, seed_prop=seed2)
 
 #A.tot_time = 100000
 
 ###############################################################################
 # Animation function
-
 
 def update_square(frame_number, mat, A, convolve):
     """Next frame update for animation without ECG"""
@@ -44,13 +36,15 @@ def update_square(frame_number, mat, A, convolve):
         ani.event_source.stop()
         A.change_connections(1, 1)
         ani.event_source.start()
+    if A.t == 6000:
+            A.p_nonfire = 0
 
     A.cmp_animation()
 
     ###### WITH CONVOLUTION ######
 
     if convolve:
-        convolution = gaussian_filter(A.phases.reshape([A.L, A.L]), sigma=1,
+        convolution = gaussian_filter(A.phases.reshape([A.L, A.L]), sigma=1.4,
                                   mode=('wrap', 'nearest'))
         
 
@@ -68,14 +62,11 @@ def update_hex(frame_number, collection, A, convolve):    # Frame number passed 
     """Next frame update for animation without ECG"""
 
     A.cmp_animation()
-    
-    if A.AF == True:
-        print('AF')
 
-    sigma = 1.4
+    # WITH CONVOLUTION
 
     if convolve:
-        convolution = gaussian_filter(A.phases.reshape([A.L, A.L]), sigma=sigma,
+        convolution = gaussian_filter(A.phases.reshape([A.L, A.L]), sigma=1.2,
                                       mode=('wrap', 'nearest'))
     
         data = np.ravel(convolution)
@@ -86,8 +77,8 @@ def update_hex(frame_number, collection, A, convolve):    # Frame number passed 
         collection.set_array(np.array(A.phases))
 
 
-    ax.set_title('refractory period = %i, threshold = %0.2f, p not fire = %0.2f, \nseed connection = %i, seed propagation = %i, \nnu = %0.3f, t = %i, sigma = %0.1f' % (A.rp, A.threshold, A.p_nonfire, A.seed_connections, A.seed_prop, A.nu_para, A.t, sigma), fontsize=20)
-    ax.title.set_position([0.5, 0.85])   
+    ax.set_title('refractory period = %i, threshold = %0.2f, \nseed connection = %i, seed propagation = %i, sigma = %0.1f \nnu = %0.3f, p not fire = %0.3f, t = %i' % (A.rp, A.threshold, A.seed_connections, A.seed_prop, 1.4, A.nu_para, A.p_nonfire, A.t), fontsize=20)
+    ax.title.set_position([0.5, 0.85])
 
     return ax,
 
@@ -116,7 +107,7 @@ if not A.hexagonal:
 if A.hexagonal:
     np.random.seed(A.seed_prop)
 
-    fig1 = plt.figure(figsize = [10,7])
+    fig1 = plt.figure(figsize = [15,15])
     ax = fig1.subplots(1,1)
 
     patches = []
@@ -155,7 +146,7 @@ if A.hexagonal:
     # ax.set_title('nu = %f' % A.nu_para)
     ani = animation.FuncAnimation(fig1, update_hex, frames=A.tot_time,
                                   fargs=(collection, A, convolve),
-                                  interval=5, repeat=None)
+                                  interval=50, repeat=None)
 
     plt.axis([-1, A.L + 1, -1, A.L + 1])
     plt.show()
