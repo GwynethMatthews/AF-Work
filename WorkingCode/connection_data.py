@@ -17,6 +17,7 @@ for i in results:
     
     average_number += sum(number_of_excited_cells[:15])/float(sum(number_of_excited_cells))
     #if i[0] == 0.46:
-    plt.pie(number_of_excited_cells[:10])
-   # plt.scatter(current_values[:10], number_of_connections[:10])
+    #plt.bar(number_of_excited_cells[:10])
+    plt.bar(current_values[:10], number_of_excited_cells[:10], width = 0.01)
+plt.legend()
 print(average_number/len(results))
