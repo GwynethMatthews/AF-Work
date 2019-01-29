@@ -19,12 +19,18 @@ class Atrium:
     s2: seed for transverse connection selection
     s3: seed for parallel connection selection
     s4: seed for cell firing selection (e or p)
+    boundary: True for pipe, False fro sq slab
+    pacemaker_line: True for first column, False for quarter circle corner
+    radius: size of square SA node if pacemaker_line == False
     """
     def __init__(self, hexagonal=False, L=200, rp=50, tot_time=10**6, nu_para=0.6, nu_trans=0.6,
-                 pace_rate=220, p_nonfire=0.25, seed_connections=1, seed_prop=4):
+                 pace_rate=220, p_nonfire=0.25, seed_connections=1, seed_prop=4, boundary=False, pacemaker_line = True, radius = 3):
         global inward_current
         # System Parameters
         self.hexagonal = hexagonal
+        self.boundary = boundary
+        self.pacemaker_line = pacemaker_line
+        self.radius = radius
         self.L = L
         self.nu_para = nu_para
         self.nu_trans = nu_trans
@@ -80,6 +86,8 @@ class Atrium:
         self.neighbour_list = np.array([np.array([x for x in 
                                  self.list_of_neighbours[i] if str(x) 
                                  != 'nan'],dtype = int) for i in self.index])
+        self.pacemaker_cells = None
+        self.create_pacemaker_cells()
 
     def set_AF_measuring_vars(self):
         self.excitation_rate = np.zeros(self.L**2, dtype=int)
@@ -132,9 +140,10 @@ class Atrium:
                 #if j in self.position[np.arange(1, L, 2)]:
                     if num_rand_tran1[j] <= self.nu_trans:
                         
-                        if j in self.last_row: ### last row
-                            neighbours[4][j] = j - ((self.L * self.L) - self.L)
-                            neighbours[1][j - ((self.L * self.L) - self.L)] = j
+                        if j in self.last_row:
+                            if self.boundary == True: ### last row
+                                neighbours[4][j] = j - ((self.L * self.L) - self.L)
+                                neighbours[1][j - ((self.L * self.L) - self.L)] = j
                             
                         else:
                             neighbours[4][j] = j + self.L
@@ -144,8 +153,9 @@ class Atrium:
                     if num_rand_tran2[j] <= self.nu_trans:
                         if j not in self.last_col:
                             if j in self.last_row:
-                                neighbours[3][j] = j - ((self.L*self.L) - self.L) + 1
-                                neighbours[0][j - ((self.L*self.L) - self.L) + 1] = j
+                                if self.boundary == True:
+                                    neighbours[3][j] = j - ((self.L*self.L) - self.L) + 1
+                                    neighbours[0][j - ((self.L*self.L) - self.L) + 1] = j
                               
                             else:    
                                 neighbours[3][j] = j + self.L + 1
@@ -178,8 +188,9 @@ class Atrium:
                 if num_rand_tran[j] <= self.nu_trans:
 
                     if j in self.last_row:
-                        neighbours[2][j] = j - ((self.L * self.L) - self.L)
-                        neighbours[0][j - ((self.L * self.L) - self.L)] = j
+                        if self.boundary == True:
+                            neighbours[2][j] = j - ((self.L * self.L) - self.L)
+                            neighbours[0][j - ((self.L * self.L) - self.L)] = j
 
                     else:
                         neighbours[2][j] = j + self.L
@@ -195,6 +206,12 @@ class Atrium:
         self.neighbour_list = np.array([np.array([x for x in 
                                  self.list_of_neighbours[i] if str(x) 
                                  != 'nan'],dtype = int) for i in self.index])
+    def create_pacemaker_cells(self):
+        if self.pacemaker_line == True:
+            self.pacemaker_cells = self.first_col
+            
+        else:
+            self.pacemaker_cells = np.concatenate([np.arange(self.radius) + (self.L*i) for i in range(self.radius)])
 
     def change_resting_cells(self):
         self.resting[self.to_be_excited] = False    # Sets recently excited cells to False (not resting)
@@ -300,8 +317,8 @@ class Atrium:
 class DysfuncModel(Atrium):
     
     def __init__(self, seed_dysfunc=1, dysfunctional_prob=0.05, hexagonal=False, L=200, rp=50, tot_time=10**6, nu_para=0.6, nu_trans=0.6,
-                 pace_rate=220, p_nonfire=0.05, seed_connections=1, seed_prop=4):
-        super(DysfuncModel, self).__init__(hexagonal, L, rp, tot_time, nu_para, nu_trans, pace_rate, p_nonfire, seed_connections, seed_prop)     # Calls Atrium init function
+                 pace_rate=220, p_nonfire=0.05, seed_connections=1, seed_prop=4, boundary=True, pacemaker_line=True, radius = 3):
+        super(DysfuncModel, self).__init__(hexagonal, L, rp, tot_time, nu_para, nu_trans, pace_rate, p_nonfire, seed_connections, seed_prop, boundary, pacemaker_line, radius)     # Calls Atrium init function
         
         self.seed_dysfunc = seed_dysfunc
         
@@ -367,16 +384,16 @@ class DysfuncModel(Atrium):
 
 class SourceSinkModel(Atrium):
     
-    def __init__(self, threshold=0.75, hexagonal=False, L=100, rp=30, tot_time=10**6, nu_para=0.6, nu_trans=0.6,
-                 pace_rate=220, p_nonfire=0.75, seed_connections=1, seed_prop=4):
+    def __init__(self, threshold=0.75, hexagonal=False, L=100, rp=30, tot_time=10**6, nu_para=1, nu_trans=1,
+                 pace_rate=220, p_nonfire=0.75, seed_connections=1, seed_prop=4, boundary=True, pacemaker_line=True, radius=3):
 
-        super(SourceSinkModel, self).__init__(hexagonal, L, rp, tot_time, nu_para, nu_trans, pace_rate, p_nonfire, seed_connections, seed_prop)       # Calls Atrium init function
+        super(SourceSinkModel, self).__init__(hexagonal, L, rp, tot_time, nu_para, nu_trans, pace_rate, p_nonfire, seed_connections, seed_prop, boundary, pacemaker_line, radius)       # Calls Atrium init function
 
         self.threshold = threshold
 
     def sinus_rhythm(self):
         if self.t % self.pace_rate == 0:
-            self.to_be_excited[self.first_col] = True
+            self.to_be_excited[self.pacemaker_cells] = True
 
     def get_inward_current(self, neighbours_list,resting_neighbours):
         inward_current = np.zeros(self.L**2)

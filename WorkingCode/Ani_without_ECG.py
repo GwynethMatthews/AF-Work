@@ -16,11 +16,11 @@ convolve = True
 
 seed1 = 1460926859
 seed2 = 623486203
-nu = 0.7
+nu = 0.5
 
 A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.05, pace_rate= 220,
                        L=100, tot_time= 1000, nu_para=nu, nu_trans=nu, rp = 30,
-                       seed_connections=seed1, seed_prop=seed2)
+                       seed_connections=seed1, seed_prop=seed2, boundary = False, pacemaker_line = False, radius = 3)
 
 #A.tot_time = 100000
 
@@ -67,7 +67,12 @@ def update_hex(frame_number, collection, A, convolve):    # Frame number passed 
 
     if convolve:
         convolution = gaussian_filter(A.phases.reshape([A.L, A.L]), sigma=1.2,
+<<<<<<< Updated upstream
                                       mode=('wrap', 'nearest'))
+=======
+                                      mode=('nearest', 'nearest'))
+
+>>>>>>> Stashed changes
     
         data = np.ravel(convolution)
         collection.set_array(data)
