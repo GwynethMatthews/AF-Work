@@ -249,7 +249,9 @@ class Atrium:
 
     def cmp_timestep(self):
         self.sinus_rhythm() # Now checks if correct time inside this function
-
+        self.cmp_no_sinus
+        
+    def cmp_no_sinus(self):
         self.relaxing()    # Changes self.states, cycles cells through the refractory states
 
         excited_cells = self.states[0]
@@ -263,15 +265,19 @@ class Atrium:
 
     def cmp_animation(self):
         self.sinus_rhythm()
-
-        self.phases[~self.resting] += 1       
+        
+        self.phases[~self.resting] += 1        
         self.phases[self.to_be_excited] = 0  # Needed for animation
+
+#        self.phases[self.resting] = 100
+#        self.phases[~self.resting] = 70        
+#        self.phases[self.to_be_excited] = 0  # Needed for animation
 #        self.phases[self.states[0]] = 0
 #        self.phases[self.states[1]] = 0
 #        self.phases[self.states[2]] = 0
 #        self.phases[self.states[3]] = 0
 
-        self.cmp_timestep()
+        self.cmp_no_sinus()
 
     def cmp_full(self):
        #np.random.seed(self.seed_prop)   # Sets seed for all dysfunctional firings etc.
@@ -290,7 +296,6 @@ class Atrium:
         self.states.extend([[]]*(new_rp-self.rp))
         print('here')
         self.rp = new_rp
-
 
 class DysfuncModel(Atrium):
     
@@ -389,8 +394,9 @@ class SourceSinkModel(Atrium):
         possible_excited = receive_current[inward_current[receive_current] < self.threshold]
 
         miss_threshold_fire_rand_nums = np.random.rand(len(possible_excited))
-        possible_excited = possible_excited[miss_threshold_fire_rand_nums > self.p_nonfire]
-        
+
+        possible_excited = possible_excited[miss_threshold_fire_rand_nums > self.p_nonfire**(inward_current[possible_excited])]  # Fire if over p_nonfire
+
         return possible_excited
 
     def cells_miss_threshold_as_a_function(self, receive_current, inward_current):
@@ -414,7 +420,7 @@ class SourceSinkModel(Atrium):
         neighbours_list, resting_neighbours = self.find_resting_neighbours(excited_cells)
         
         inward_current = self.get_inward_current(neighbours_list,resting_neighbours)  # amount of current received
-        
+
         receive_current = self.index[inward_current > 0]  # Indices which receive any current from neighbours
         hit_thresh_so_excite = receive_current[inward_current[receive_current] >= self.threshold]
         miss_thresh_but_still_excite = self.cells_miss_threshold_as_a_function(receive_current, inward_current)

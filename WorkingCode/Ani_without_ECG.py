@@ -1,4 +1,4 @@
-"""Atrium is the normal model (both Sq and Hex)"""
+
 import Atrium_Final as AC
 import numpy as np
 from scipy.ndimage import gaussian_filter
@@ -7,7 +7,6 @@ import matplotlib.animation as animation
 import matplotlib.patches as mpat
 
 from matplotlib import collections
-
 
 plt.rcParams['animation.ffmpeg_path']
 
@@ -23,14 +22,14 @@ A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.05, pace_rate= 2
                        L=100, tot_time= 1000, nu_para=nu, nu_trans=nu, rp = 30,
                        seed_connections=seed1, seed_prop=seed2)
 
+#A.tot_time = 100000
 
 ###############################################################################
 # Animation function
 
 def update_square(frame_number, mat, A, convolve):
     """Next frame update for animation without ECG"""
-
-    #print(A.t)
+    # print(A.t)
     # print(A.phases[0])
 
     if A.t % 100 == 0:
@@ -69,7 +68,6 @@ def update_hex(frame_number, collection, A, convolve):    # Frame number passed 
     if convolve:
         convolution = gaussian_filter(A.phases.reshape([A.L, A.L]), sigma=1.2,
                                       mode=('wrap', 'nearest'))
-
     
         data = np.ravel(convolution)
         collection.set_array(data)
@@ -79,7 +77,7 @@ def update_hex(frame_number, collection, A, convolve):    # Frame number passed 
         collection.set_array(np.array(A.phases))
 
 
-    ax.set_title('refractory period = %i, threshold = %0.2f, p not fire = %0.3f, \nseed connection = %i, seed propagation = %i, sigma = %0.1f \nnu = %0.3f, t = %i' % (A.rp, A.threshold, A.p_nonfire, A.seed_connections, A.seed_prop, 1.4, A.nu_para, A.t), fontsize=20)
+    ax.set_title('refractory period = %i, threshold = %0.2f, \nseed connection = %i, seed propagation = %i, sigma = %0.1f \nnu = %0.3f, p not fire = %0.3f, t = %i' % (A.rp, A.threshold, A.seed_connections, A.seed_prop, 1.4, A.nu_para, A.p_nonfire, A.t), fontsize=20)
     ax.title.set_position([0.5, 0.85])
 
     return ax,
@@ -91,9 +89,7 @@ def update_hex(frame_number, collection, A, convolve):    # Frame number passed 
 if not A.hexagonal:
     np.random.seed(A.seed_prop)
     
-
-
-    fig1 = plt.figure(figsize=[5, 5])
+    fig1 = plt.figure(figsize=[8, 5])
 
     ax = fig1.subplots(1, 1)
     ax.tight_layout()
@@ -111,12 +107,8 @@ if not A.hexagonal:
 if A.hexagonal:
     np.random.seed(A.seed_prop)
 
-
     fig1 = plt.figure(figsize = [15,15])
     ax = fig1.subplots(1,1)
-
-    fig1.tight_layout()
-
 
     patches = []
     offsets = []
@@ -160,4 +152,5 @@ if A.hexagonal:
     plt.show()
 
 
-#ani.save('Conduction block nu_0.5 p_0.25(p non fire is pinward_current).mp4', fps=25)
+#ani.save('Return to SR.mp4', fps=30, dpi=250, bitrate=5000)
+
