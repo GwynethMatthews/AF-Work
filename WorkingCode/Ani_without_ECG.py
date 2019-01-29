@@ -1,5 +1,5 @@
-"""Atrium is the normal model (both Sq and Hex)"""
-import Atrium_new_Jack as AC
+
+import Atrium_Final as AC
 import numpy as np
 from scipy.ndimage import gaussian_filter
 import matplotlib.pyplot as plt
@@ -8,23 +8,28 @@ import matplotlib.patches as mpat
 
 from matplotlib import collections
 
-
-plt.rcParams['animation.ffmpeg_path']
-
-
 # Initiating the Atrium
 convolve = True
 
 # AC.Atrium(hexagonal=False, L=200, rp=50, tot_time=10**6, nu_para=0.6, nu_trans=0.6,
 #                 pace_rate=220, p_nonfire=0.05, seed_connections=1, seed_prop=4)
 
-seed1 = 151436245
-seed2 = 234
-nu = 0.65
+seed1 = 23774531
+seed2 = 543192322
+nu = 0.5
 
-A = AC.SourceSinkModel(hexagonal = True, pace_rate = 180, threshold = 1, p_nonfire = 0.35, L = 100, rp = 30, tot_time = 80000, nu_para=nu, nu_trans=nu,seed_connections=seed1, seed_prop=seed2)
+#rands = np.random.randint(0, 10000000, (100, 2))
+#
+#for elem in rands:
+#    print('-------New heart-------')
+#    A = AC.SourceSinkModel(hexagonal = True, pace_rate = 220, threshold = 1, p_nonfire = 0.03, L = 100, rp = 30, tot_time = 40000, nu_para=nu, nu_trans=nu,seed_connections=elem[0], seed_prop=elem[1])
+#    A.cmp_full()
+#    print("AF time: ", A.tot_AF)
+#    print("seeds: ", elem[0], elem[1])
 
+A = AC.SourceSinkModel(hexagonal = True, pace_rate = 220, threshold = 1, p_nonfire = 0.05, L = 100, rp = 30, tot_time = 10000, nu_para=nu, nu_trans=nu,seed_connections=seed1, seed_prop=seed2)
 
+#A.tot_time = 100000
 
 ###############################################################################
 # Animation function
@@ -32,8 +37,7 @@ A = AC.SourceSinkModel(hexagonal = True, pace_rate = 180, threshold = 1, p_nonfi
 
 def update_square(frame_number, mat, A, convolve):
     """Next frame update for animation without ECG"""
-
-    #print(A.t)
+    # print(A.t)
     # print(A.phases[0])
 
     if A.t % 100 == 0:
@@ -64,46 +68,15 @@ def update_hex(frame_number, collection, A, convolve):    # Frame number passed 
     """Next frame update for animation without ECG"""
 
     A.cmp_animation()
-
-#    if A.t in [2000,12000,22000,32000,42000]:
-#        A.change_connections(A.nu_para + 0.1, A.nu_trans + 0.1)
-#        
-    if A.t == 300:
-        A.tot_time = A.t + 1400
-        A.cmp_full()
-        A.tot_time = 113500
-#    if A.t in [2300,12300,22300,32300]: #,42300]:
-#        A.tot_time = A.t + 9600
-#        A.cmp_full()
-#        A.tot_time = 113500
-    if A.t == 5700:
-        A.tot_time = 62000
-        A.cmp_full()
-        A.tot_time = 113500        
-    if A.t == 2200:
-        A.tot_time = 4800
-        A.cmp_full()
-#        A.tot_time = 113500
-
-    if A.t == 5000:
-        A.change_connections(A.nu_para + 0.4, A.nu_trans + 0.4)
-  
-#    if A.t == 12000:
-#        A.change_connections(A.nu_para + 0.1, A.nu_trans + 0.1)
-#    
-#    if A.t == 22000:
-#        A.change_connections(A.nu_para + 0.1, A.nu_trans + 0.1)
-    if A.t == 63000:
-        print('here')
-    #A.cmp_animation()
-    #print(A.t_AF)
     
-    # WITH CONVOLUTION
+    if A.AF == True:
+        print('AF')
+
+    sigma = 1.4
 
     if convolve:
-        convolution = gaussian_filter(A.phases.reshape([A.L, A.L]), sigma=1.1,
+        convolution = gaussian_filter(A.phases.reshape([A.L, A.L]), sigma=sigma,
                                       mode=('wrap', 'nearest'))
-
     
         data = np.ravel(convolution)
         collection.set_array(data)
@@ -113,8 +86,8 @@ def update_hex(frame_number, collection, A, convolve):    # Frame number passed 
         collection.set_array(np.array(A.phases))
 
 
-    ax.set_title('refractory period = %i, threshold = %0.2f, p not fire = %0.2f, \nseed connection = %i, seed propagation = %i, \nnu = %0.3f, t = %i' % (A.rp, A.threshold, A.p_nonfire, A.seed_connections, A.seed_prop, A.nu_para, A.t), fontsize=20)
-    ax.title.set_position([0.5, 0.85])
+    ax.set_title('refractory period = %i, threshold = %0.2f, p not fire = %0.2f, \nseed connection = %i, seed propagation = %i, \nnu = %0.3f, t = %i, sigma = %0.1f' % (A.rp, A.threshold, A.p_nonfire, A.seed_connections, A.seed_prop, A.nu_para, A.t, sigma), fontsize=20)
+    ax.title.set_position([0.5, 0.85])   
 
     return ax,
 
@@ -125,9 +98,7 @@ def update_hex(frame_number, collection, A, convolve):    # Frame number passed 
 if not A.hexagonal:
     np.random.seed(A.seed_prop)
     
-
-
-    fig1 = plt.figure(figsize=[5, 5])
+    fig1 = plt.figure(figsize=[8, 5])
 
     ax = fig1.subplots(1, 1)
     ax.tight_layout()
@@ -145,12 +116,8 @@ if not A.hexagonal:
 if A.hexagonal:
     np.random.seed(A.seed_prop)
 
-
-    fig1 = plt.figure(figsize = [7,7])
+    fig1 = plt.figure(figsize = [10,7])
     ax = fig1.subplots(1,1)
-
-    fig1.tight_layout()
-
 
     patches = []
     offsets = []
@@ -181,7 +148,7 @@ if A.hexagonal:
     ax.add_collection(collection, autolim=True)
 
     #collection.set_edgecolor('face')
-    collection.set_clim(0, 100)
+    collection.set_clim(0, A.rp)
 
     ax.axis('equal')
     ax.set_axis_off()
@@ -194,5 +161,5 @@ if A.hexagonal:
     plt.show()
 
 
-ani.save('Returns to SR, jump from 0.58 to 0.98 at 5000 (video2).mp4', fps=30, dpi=250, bitrate=5000)
+#ani.save('Return to SR.mp4', fps=30, dpi=250, bitrate=5000)
 

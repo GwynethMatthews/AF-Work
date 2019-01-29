@@ -1,4 +1,4 @@
-import Atrium as AC
+import Atrium_Final as AC
 import numpy as np
 import matplotlib.gridspec as mgs
 import matplotlib.pyplot as plt
@@ -21,7 +21,7 @@ def ECG(Atrium, LoP):
 def update2(frame_number, mat, A, denominator):
     """Next frame update for animation with ECG"""
     if frame_number in A.pace:
-        A.SinusRhythm()
+        A.sinus_rhythm()
     A.Relaxing_ani()
     A.Conduct()
     data = A.phases.reshape([A.L, A.L])
@@ -38,8 +38,7 @@ def update2(frame_number, mat, A, denominator):
     return mat,
 
 
-A = AC.Atrium(hexagonal = False, v_para = 0.6, v_tran_1 = 0.6, v_tran_2 = 0.4,
-              e = 0.05, s1 = 1520, s2 = 250, s3 = 230, s4 = 204)
+A = AC.SourceSinkModel(hexagonal = True)
 LoP = [100.5, 100.5]
 np.random.seed(A.seed_prop)
 fig2 = plt.figure()
