@@ -13,13 +13,9 @@ def OnePacemakerBeat(parameters=input_param, seeds=input_seeds, itr=job_number):
 
     for l in range(len(parameters[itr])):
 
-
         repeat_data = []
 	#print(l)
-        for i in range(100):  ### Number of repeats
-
-    	    
-
+        for i in range(100):  ### Number of repeats    	    
             A = AF.SourceSinkModel(hexagonal = True, L = 200, v_para = parameters[itr][l][0],
                          v_tran_1 = parameters[itr][l][0], v_tran_2 = parameters[itr][l][0],
                          threshold = parameters[itr][l][1], p = parameters[itr][l][2], rp = 50, tot_time = 10**6,
@@ -27,27 +23,22 @@ def OnePacemakerBeat(parameters=input_param, seeds=input_seeds, itr=job_number):
 
             np.random.seed(A.seed_prop)
 
-            A.SinusRhythm()
-            A.Relaxing()
-            A.Conduct()
+            A.cmp_timestep()   ### With one sinus beat       
+            
             while A.stop == False:
-
                 if len(A.states[0]) != 0:
 
                     if A.t != 5000:
-                        A.Relaxing()
-                        A.Conduct()
-                        A.t += 1
-
+                        
+                        A.cmp_no_timestep()
+                        
                         A.TimeInAF()
 
                         if A.AF == True:
                             A.t_AF = A.t
                             A.stop = True
 
-
                     else:
-
                         A.fail_safe = True
                         A.time_extinguished = A.t
                         A.stop = True
@@ -75,7 +66,7 @@ OnePacemakerBeat(parameters=input_param, seeds=input_seeds, itr=job_number)
 
 #parameters = []
 #for i in np.linspace(0.01, 1, 100, endpoint = True): # nu values
-#    for j in np.array([0.25,0.3,0.4,0.45,0.5,0.75]): # threshold values
+#    for j in np.array([0.4,0.45,0.5,0.75, 1.0, 1.25]): # threshold values
 #        for k in np.linspace(0.01, 1, 100, endpoint = True): # p values
 #            parameters.extend([[i,j,k]])
 #parameters = np.array(parameters).reshape((1000,60,3))
