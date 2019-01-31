@@ -1,78 +1,69 @@
-
 import Atrium_Final as AC
 import numpy as np
 from scipy.ndimage import gaussian_filter
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import matplotlib.patches as mpat
-
 from matplotlib import collections
 
-plt.rcParams['animation.ffmpeg_path']
+from pydrive.auth import GoogleAuth
+from pydrive.drive import GoogleDrive
+import os
+
+#gauth = GoogleAuth()
+## Try to load saved client credentials
+#gauth.LoadCredentialsFile("mycreds.txt")
+#
+#if gauth.credentials is None:       # Authenticate if they're not there
+#    gauth.LocalWebserverAuth()
+#    
+#elif gauth.access_token_expired:    # Refresh them if expired
+#    gauth.Refresh()
+#    
+#else:         # Initialize the saved creds
+#    gauth.Authorize()
+#    
+#gauth.SaveCredentialsFile("mycreds.txt")    # Save the current credentials to a file
+#drive = GoogleDrive(gauth)
 
 ###############################################################################
 # Initiating the Atrium
+
 convolve = True
 
 seed1 = 1460926859
 seed2 = 623486203
-nu = 0.5
+nu = 0.53
 
-A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.05, pace_rate= 220,
-                       L=100, tot_time= 1000, nu_para=nu, nu_trans=nu, rp = 30,
-                       seed_connections=seed1, seed_prop=seed2, boundary = False, pacemaker_line = False, radius = 3)
+A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.025, pace_rate= 112,
+                       L=100, tot_time= 10000, nu_para=nu, nu_trans=nu, rp = 110,
+                       seed_connections=seed1, seed_prop=seed2, boundary = True, pacemaker_line = True, radius = 3)
 
 #A.tot_time = 100000
 
 ###############################################################################
 # Animation function
 
-def update_square(frame_number, mat, A, convolve):
-    """Next frame update for animation without ECG"""
-    # print(A.t)
-    # print(A.phases[0])
-
-    if A.t % 100 == 0:
-        ani.event_source.stop()
-        A.change_connections(1, 1)
-        ani.event_source.start()
-    if A.t == 6000:
-            A.p_nonfire = 0
-
-    A.cmp_animation()
-
-    ###### WITH CONVOLUTION ######
-
-    if convolve:
-        convolution = gaussian_filter(A.phases.reshape([A.L, A.L]), sigma=1.4,
-                                  mode=('wrap', 'nearest'))
-        
-
-        mat.set_data(convolution)
-    
-    ###### WITHOUT CONVOLUTION ######
-    else:
-        data = A.phases.reshape([A.L, A.L])
-        mat.set_data(data)
-    
-    return mat,
-
-
 def update_hex(frame_number, collection, A, convolve):    # Frame number passed as default so needed
     """Next frame update for animation without ECG"""
 
+    if A.t < 10*A.pace_rate:    ### Change multiplier to change number of paces
+        A.sinus_rhythm()
+    
     A.cmp_animation()
+    
+    if A.AF == True:
+        print('AF')
 
     # WITH CONVOLUTION
-
     if convolve:
-        convolution = gaussian_filter(A.phases.reshape([A.L, A.L]), sigma=1.2,
-<<<<<<< Updated upstream
-                                      mode=('wrap', 'nearest'))
-=======
-                                      mode=('nearest', 'nearest'))
+        if A.boundary == False:
+            convolution = gaussian_filter(A.phases.reshape([A.L, A.L]), sigma=1.4,
+                                  mode=('nearest', 'nearest'))
+        if A.boundary == True:
+            convolution = gaussian_filter(A.phases.reshape([A.L, A.L]), sigma=1.4,
+                                  mode=('wrap', 'nearest'))
 
->>>>>>> Stashed changes
     
         data = np.ravel(convolution)
         collection.set_array(data)
@@ -86,6 +77,29 @@ def update_hex(frame_number, collection, A, convolve):    # Frame number passed 
     ax.title.set_position([0.5, 0.85])
 
     return ax,
+
+
+def update_square(frame_number, mat, A, convolve):
+    A.cmp_animation()
+
+    ###### WITH CONVOLUTION ######
+
+    if convolve:
+        if A.boundary == False:
+            convolution = gaussian_filter(A.phases.reshape([A.L, A.L]), sigma=1.4,
+                                  mode=('wrap', 'nearest'))
+        if A.boundary == True:
+            convolution = gaussian_filter(A.phases.reshape([A.L, A.L]), sigma=1.4,
+                                  mode=('wrap', 'nearest'))
+
+        mat.set_data(convolution)
+    
+    ###### WITHOUT CONVOLUTION ######
+    else:
+        data = A.phases.reshape([A.L, A.L])
+        mat.set_data(data)
+    
+    return mat,
 
 ###############################################################################
 
@@ -157,5 +171,18 @@ if A.hexagonal:
     plt.show()
 
 
-#ani.save('Return to SR.mp4', fps=30, dpi=250, bitrate=5000)
 
+file_path = "NewVid.mp4"
+folder_id = "1zpBUFJO6XAkmoWuWnWGRsj6O6oJCwYI0"      ### Folder ID for AF_Stuff folder
+
+file_save = False
+#ani.save(file_path, fps=30, dpi=250, bitrate=5000)
+
+if file_save == True:
+    ani.save(file_path, fps=30, dpi=250, bitrate=5000)
+    
+    file1 = drive.CreateFile({"parents": [{"kind": "drive#fileLink", "id": folder_id}]})
+    file1.SetContentFile(file_path)
+    file1.Upload()
+    
+    os.remove(file_path)
