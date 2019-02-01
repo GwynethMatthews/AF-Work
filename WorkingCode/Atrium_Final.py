@@ -282,17 +282,9 @@ class Atrium:
 
     def cmp_animation(self):
         self.sinus_rhythm()
-        
+
         self.phases[~self.resting] += 1        
         self.phases[self.to_be_excited] = 0  # Needed for animation
-
-#        self.phases[self.resting] = 100
-#        self.phases[~self.resting] = 70        
-#        self.phases[self.to_be_excited] = 0  # Needed for animation
-#        self.phases[self.states[0]] = 0
-#        self.phases[self.states[1]] = 0
-#        self.phases[self.states[2]] = 0
-#        self.phases[self.states[3]] = 0
 
         self.cmp_no_sinus()
 
@@ -304,14 +296,14 @@ class Atrium:
             
         self.tot_AF += self.t_AF
     
-    def change_connections(self, increment):
-        self.nu_trans += increment
-        self.nu_para += increment
+    def change_connections(self, new_nu_para, new_nu_trans):
+        self.nu_trans = new_nu_trans
+        self.nu_para = new_nu_para
         self.create_neighbours()
     
     def change_rp(self, new_rp):
         self.states.extend([[]]*(new_rp-self.rp))
-        print('here')
+        self.phases[self.phases == self.rp] = new_rp
         self.rp = new_rp
 
 class DysfuncModel(Atrium):
@@ -394,6 +386,9 @@ class SourceSinkModel(Atrium):
     def sinus_rhythm(self):
         if self.t % self.pace_rate == 0:
             self.to_be_excited[self.pacemaker_cells] = True
+    
+    def ectopic_beat(self, location_of_cells):
+        self.to_be_excited[location_of_cells] = True
 
     def get_inward_current(self, neighbours_list,resting_neighbours):
         inward_current = np.zeros(self.L**2)

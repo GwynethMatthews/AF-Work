@@ -13,24 +13,25 @@ plt.rcParams['animation.ffmpeg_path']
 ###############################################################################
 # Initiating the Atrium
 convolve = True
+grey_background = True
 
-seed1 = 1460926859
-seed2 = 623486203
-nu = 0.5
+seed1 = 98326859
+seed2 = 623237203
+nu = 0.6
 
-A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.05, pace_rate= 220,
-                       L=100, tot_time= 1000, nu_para=nu, nu_trans=nu, rp = 30,
-                       seed_connections=seed1, seed_prop=seed2, boundary = False, pacemaker_line = False, radius = 3)
 
-#A.tot_time = 100000
+A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.05, pace_rate= 125,
+                       L=100, tot_time= 2000, nu_para=nu, nu_trans=nu, rp = 120,
+                       seed_connections=seed1, seed_prop=seed2, boundary = True, 
+                       pacemaker_line = True, radius = 3)
+
+
 
 ###############################################################################
 # Animation function
-
+#### Square Lattice ####
 def update_square(frame_number, mat, A, convolve):
     """Next frame update for animation without ECG"""
-    # print(A.t)
-    # print(A.phases[0])
 
     if A.t % 100 == 0:
         ani.event_source.stop()
@@ -57,32 +58,60 @@ def update_square(frame_number, mat, A, convolve):
     
     return mat,
 
-
+#### Hex Lattice ####
 def update_hex(frame_number, collection, A, convolve):    # Frame number passed as default so needed
     """Next frame update for animation without ECG"""
 
     A.cmp_animation()
-
-    # WITH CONVOLUTION
-
-    if convolve:
-        convolution = gaussian_filter(A.phases.reshape([A.L, A.L]), sigma=1.2,
-<<<<<<< Updated upstream
-                                      mode=('wrap', 'nearest'))
-=======
-                                      mode=('nearest', 'nearest'))
-
->>>>>>> Stashed changes
     
-        data = np.ravel(convolution)
+    
+    ### CHANGING PACE_RATE ###
+#    if A.t == 600:
+#        A.pace_rate = 4400000
+    
+    ### CHANGING P_NONFIRE (smaller p_nonfire makes it more likely to fire) ###
+#    if A.t in np.arange(1100,15100,1000):
+#        A.p_nonfire -= 0.01
+    ### Note if p is decreasing can have errors when it reaches 0, fixed if set time for p_nonfire = 0 ###
+#    if A.t == 1000:
+#        A.p_nonfire = 0
+    
+    ### CHANGING REFRACTORY PERIOD ###
+#    if A.t == 600:
+#        A.change_rp(150)
+    
+    
+    
+    # WITH CONVOLUTION
+    if convolve:
+        if grey_background:
+        
+            mx = np.array(A.phases.reshape([A.L, A.L]) == A.rp)
+            mx1 = gaussian_filter(np.ma.masked_array(A.phases.reshape([A.L, A.L]), mx), sigma=1.2,
+                                      mode=('wrap', 'nearest'))
+            
+            a = max(mx1.flatten())
+
+            mx2 = np.array(mx1 >= 0.9*a)
+            mx3 = mx*mx2
+            mx1 = np.ma.masked_array(mx1,mx3)
+
+            data = np.ravel(mx1)
+        else:
+            convolution = gaussian_filter(A.phases.reshape([A.L, A.L]), sigma=1.2,
+                                      mode=('wrap', 'nearest'))
+            
+            data = np.ravel(convolution)
+            
         collection.set_array(data)
+        collection.set_clim(0, A.rp)
         
     # WITHOUT CONVOLUTION
     else:
         collection.set_array(np.array(A.phases))
 
 
-    ax.set_title('refractory period = %i, threshold = %0.2f, \nseed connection = %i, seed propagation = %i, sigma = %0.1f \nnu = %0.3f, p not fire = %0.3f, t = %i' % (A.rp, A.threshold, A.seed_connections, A.seed_prop, 1.4, A.nu_para, A.p_nonfire, A.t), fontsize=20)
+    ax.set_title('refractory period = %i, threshold = %0.2f, \nseed connection = %i, seed propagation = %i, pace_rate = %i \nnu = %0.3f, p not fire = %0.3f, t = %i' % (A.rp, A.threshold, A.seed_connections, A.seed_prop, A.pace_rate, A.nu_para, A.p_nonfire, A.t), fontsize=20)
     ax.title.set_position([0.5, 0.85])
 
     return ax,
@@ -143,12 +172,12 @@ if A.hexagonal:
 
     ax.add_collection(collection, autolim=True)
 
-    #collection.set_edgecolor('face')
     collection.set_clim(0, A.rp)
+    collection.cmap.set_bad((169/600,169/600,169/600))
+#    collection.set_edgecolor('face')
 
     ax.axis('equal')
     ax.set_axis_off()
-    # ax.set_title('nu = %f' % A.nu_para)
     ani = animation.FuncAnimation(fig1, update_hex, frames=A.tot_time,
                                   fargs=(collection, A, convolve),
                                   interval=50, repeat=None)
@@ -157,5 +186,5 @@ if A.hexagonal:
     plt.show()
 
 
-#ani.save('Return to SR.mp4', fps=30, dpi=250, bitrate=5000)
+#ani.save('Messy AF nu 0.6.mp4', fps=30)
 
