@@ -237,7 +237,7 @@ class Atrium:
             a = np.mean(b)
 
 
-            if a < self.pace_rate * 0.9: # and beat <= self.pace_rate * 1.5:
+            if a < self.pace_rate - 1: # and beat <= self.pace_rate * 1.5:
                 self.AF = True
                 self.t_AF += 1
                 ##print(self.AF)
@@ -281,6 +281,7 @@ class Atrium:
         self.t += 1
 
     def cmp_animation(self):
+
         self.sinus_rhythm()
 
         self.phases[~self.resting] += 1        
