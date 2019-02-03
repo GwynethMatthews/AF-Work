@@ -74,6 +74,12 @@ class Atrium:
         self.phases = np.full((L * L), fill_value=self.rp)         # state cell is in (0 = excited, rp = resting)
         self.V = np.full((L * L), fill_value=-90.0)                # voltage depending on state of cell
         
+        # Added by Gwyn for Trial and Error data collection
+        self.resting_cells = np.zeros((501))
+        self.time_for_graphs = np.arange(-500,1,1)
+        self.resting_cells_over_time = []
+        self.receive_current = 0
+        
         self.states = [[]] * self.rp              # list of lists containing cells in each state except resting
         self.resting = np.full([self.L**2], fill_value=True, dtype=bool)         # can they be excited
         self.to_be_excited = np.full([self.L**2], fill_value=False, dtype=bool)        # cells to be excited next timestep
@@ -307,6 +313,9 @@ class Atrium:
         self.phases[self.phases == self.rp] = new_rp
         self.rp = new_rp
 
+    def resting_cells_over_time_collect(self):
+        self.resting_cells_over_time.extend([len(self.resting[self.resting == True])])
+
 class DysfuncModel(Atrium):
     
     def __init__(self, seed_dysfunc=1, dysfunctional_prob=0.05, hexagonal=False, L=200, rp=50, tot_time=10**6, nu_para=0.6, nu_trans=0.6,
@@ -435,9 +444,12 @@ class SourceSinkModel(Atrium):
         inward_current = self.get_inward_current(neighbours_list,resting_neighbours)  # amount of current received
 
         receive_current = self.index[inward_current > 0]  # Indices which receive any current from neighbours
+        if len(receive_current) > 0:
+            self.receive_current += sum(inward_current)/len(receive_current)
         hit_thresh_so_excite = receive_current[inward_current[receive_current] >= self.threshold]
         miss_thresh_but_still_excite = self.cells_miss_threshold_as_a_function(receive_current, inward_current)
 
         self.to_be_excited[miss_thresh_but_still_excite] = True
         self.to_be_excited[hit_thresh_so_excite] = True
+        
 
