@@ -39,7 +39,7 @@ nu = 0.5
 
 A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.05, pace_rate= 91,
                        L=100, tot_time= 1300, nu_para=nu, nu_trans=nu, rp = 90,
-                       seed_connections=seed1, seed_prop=seed2, boundary = True, pacemaker_line = True, radius = 3)
+                       seed_connections=seed1, seed_prop=seed2, boundary = True, pacemaker_line = True, radius = 3, charge_conservation = False)
 
 
 ###############################################################################

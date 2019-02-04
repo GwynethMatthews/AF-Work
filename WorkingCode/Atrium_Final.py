@@ -22,15 +22,17 @@ class Atrium:
     boundary: True for pipe, False fro sq slab
     pacemaker_line: True for first column, False for quarter circle corner
     radius: size of square SA node if pacemaker_line == False
+    charge_conservation: if True then an excited cell with inward_current > threshold gives inward_current/N to each resting neighbour, if False gives 1/N
     """
     def __init__(self, hexagonal=False, L=200, rp=50, tot_time=10**6, nu_para=0.6, nu_trans=0.6,
-                 pace_rate=220, p_nonfire=0.25, seed_connections=1, seed_prop=4, boundary=False, pacemaker_line = True, radius = 3):
+                 pace_rate=220, p_nonfire=0.25, seed_connections=1, seed_prop=4, boundary=False, pacemaker_line = True, radius = 3, charge_conservation = True):
         global inward_current
         # System Parameters
         self.hexagonal = hexagonal
         self.boundary = boundary
         self.pacemaker_line = pacemaker_line
         self.radius = radius
+        self.charge_conservation = charge_conservation
         self.L = L
         self.nu_para = nu_para
         self.nu_trans = nu_trans
@@ -389,9 +391,9 @@ class DysfuncModel(Atrium):
 class SourceSinkModel(Atrium):
     
     def __init__(self, threshold=0.75, hexagonal=False, L=100, rp=30, tot_time=10**6, nu_para=1, nu_trans=1,
-                 pace_rate=220, p_nonfire=0.75, seed_connections=1, seed_prop=4, boundary=True, pacemaker_line=True, radius=3):
+                 pace_rate=220, p_nonfire=0.75, seed_connections=1, seed_prop=4, boundary=True, pacemaker_line=True, radius=3, charge_conservation = True):
 
-        super(SourceSinkModel, self).__init__(hexagonal, L, rp, tot_time, nu_para, nu_trans, pace_rate, p_nonfire, seed_connections, seed_prop, boundary, pacemaker_line, radius)       # Calls Atrium init function
+        super(SourceSinkModel, self).__init__(hexagonal, L, rp, tot_time, nu_para, nu_trans, pace_rate, p_nonfire, seed_connections, seed_prop, boundary, pacemaker_line, radius, charge_conservation)       # Calls Atrium init function
 
         self.threshold = threshold
 
@@ -404,15 +406,22 @@ class SourceSinkModel(Atrium):
 
     def get_inward_current(self, neighbours_list,resting_neighbours,excited_cells):
         inward_current = np.zeros(self.L**2)
-        j = 0
-        for i in neighbours_list:
-            
-            if len(i) != 0:
-                print(inward_current[i])
-                inward_current[i] += float(self.current[excited_cells[j]])/ len(i)
-                print(self.current[excited_cells[j]])
-                print(inward_current[i])
-            j += 1
+        if self.charge_conservation == True:
+            j = 0
+            for i in neighbours_list:
+                if len(i) != 0:
+                    print(inward_current[i])
+                    inward_current[i] += float(self.current[excited_cells[j]])/ len(i)
+                    print(self.current[excited_cells[j]])
+                    print(inward_current[i])
+                j += 1
+        else:
+
+            for i in neighbours_list:
+                if len(i) != 0:
+                    print(inward_current[i])
+                    inward_current[i] += float(1)/ len(i)
+                    print(inward_current[i])
         return inward_current
 
     def cells_miss_threshold_p_constant(self, receive_current, inward_current):
@@ -452,9 +461,10 @@ class SourceSinkModel(Atrium):
         
         hit_thresh_so_excite = receive_current[inward_current[receive_current] >= self.threshold]
         miss_thresh_but_still_excite = self.cells_miss_threshold_as_a_function(receive_current, inward_current)
-        self.current = np.ones_like(self.index, dtype = float)
-        self.current[hit_thresh_so_excite] = inward_current[hit_thresh_so_excite]
-        #self.current[miss_thresh_but_still_excite] = inward_current[miss_thresh_but_still_excite]
+        if self.charge_conservation == True:
+            self.current = np.ones_like(self.index, dtype = float)
+            self.current[hit_thresh_so_excite] = inward_current[hit_thresh_so_excite]
+            #self.current[miss_thresh_but_still_excite] = inward_current[miss_thresh_but_still_excite]
         self.to_be_excited[miss_thresh_but_still_excite] = True
         self.to_be_excited[hit_thresh_so_excite] = True
         
