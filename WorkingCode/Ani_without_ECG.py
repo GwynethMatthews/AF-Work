@@ -29,16 +29,16 @@ from matplotlib import collections
 ###############################################################################
 # Initiating the Atrium
 
-convolve = True
+convolve = False
 grey_background = True
 resting_cells = False
 
-seed1 = 19298298
-seed2 = 18822023
-nu = 0.55
+seed1 = 7249904
+seed2 = 3522140
+nu = 0.5
 
-A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.05, pace_rate= 112,
-                       L=100, tot_time= 2230, nu_para=nu, nu_trans=nu, rp = 110,
+A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.05, pace_rate= 91,
+                       L=100, tot_time= 1300, nu_para=nu, nu_trans=nu, rp = 90,
                        seed_connections=seed1, seed_prop=seed2, boundary = True, pacemaker_line = True, radius = 3)
 
 
@@ -59,23 +59,31 @@ def update_hex(frame_number, collection, A, convolve):    # Frame number passed 
     A.resting_cells_over_time_collect()
     
         ### CHANGING REFRACTORY PERIOD ###
-    if A.t == 10*A.pace_rate:
-        A.change_rp(130)
-        print(A.rp)
+#    if A.t == 10*91 + 100:
+#        A.change_rp(120)
+#        print(A.rp)
         
     ### CHANGING PACE_RATE ###
-    if A.t == 10*A.pace_rate:
+    if A.t == 1000:
         A.pace_rate = 10**10
     
     ### CHANGING P_NONFIRE (smaller p_nonfire makes it more likely to fire) ###
-    if A.t in np.arange(10*110 + 200, 10*110 + 200*49, 200 ):
-        A.p_nonfire -= 0.001
-    ### Note if p is decreasing can have errors when it reaches 0, fixed if set time for p_nonfire = 0 ###
-    if A.t == 10900:
-        A.p_nonfire = 0
+#    if A.t in np.arange(1210, 1210 + 200*4, 200 ):
+#        A.p_nonfire -= 0.01
+#    ### Note if p is decreasing can have errors when it reaches 0, fixed if set time for p_nonfire = 0 ###
+    if A.t == 1200:
+       A.p_nonfire = 0
+       
+    if A.t == 1200:
+        fig2 = plt.figure(2)
+        ax3 = fig2.subplots(1, 1)
+        x = np.bincount(A.excitation_rate)
+        ax3.scatter(np.arange(len(x)), x, label = 't = 1200')
+        ax3.plot([90,90], [0,2180])
     
-    if len(A.states[0])== 0:
-        print(A.t)
+    
+#    if len(A.states[0])== 0:
+#        print(A.t)
     # WITH CONVOLUTION
     if convolve:
         if A.boundary == True:
@@ -108,7 +116,13 @@ def update_hex(frame_number, collection, A, convolve):    # Frame number passed 
         
     # WITHOUT CONVOLUTION
     else:
-        collection.set_array(np.array(A.phases))
+        if grey_background:
+            mx = np.array(A.phases.reshape([A.L, A.L]) == A.rp)
+            data = np.ma.masked_array(A.phases,mx)
+            collection.set_array(data)
+        
+        else: 
+            collection.set_array(np.array(A.phases))
 
 
     ax1.set_title('refractory period = %i, threshold = %0.2f, \nseed connection = %i, seed propagation = %i, pace_rate = %i \nnu = %0.3f, p not fire = %0.3f, t = %i' % (A.rp, A.threshold, A.seed_connections, A.seed_prop, A.pace_rate, A.nu_para, A.p_nonfire, A.t), fontsize=20)
@@ -225,7 +239,7 @@ if A.hexagonal:
 
 ###SAVING VIDEO###
 
-ani.save('(Video 5) Pacing then increase rp and increase p slowly.mp4', fps=30)
+#ani.save('Change of refractory period and p.mp4', fps=60)
 
 #file_path = "NewVid.mp4"
 #folder_id = "1zpBUFJO6XAkmoWuWnWGRsj6O6oJCwYI0"      ### Folder ID for AF_Stuff folder
