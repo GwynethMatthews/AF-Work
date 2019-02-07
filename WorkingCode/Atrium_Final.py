@@ -23,7 +23,7 @@ class Atrium:
     pacemaker_line: True for first column, False for quarter circle corner
     radius: size of square SA node if pacemaker_line == False
     """
-    def __init__(self, hexagonal=False, L=200, rp=50, tot_time=10**6, nu_para=0.6, nu_trans=0.6,
+    def __init__(self, hexagonal=False, Lx=100, Ly = 150, rp=50, tot_time=10**6, nu_para=0.6, nu_trans=0.6,
                  pace_rate=220, p_nonfire=0.25, seed_connections=1, seed_prop=4, boundary=False, pacemaker_line = True, radius = 3):
         global inward_current
         # System Parameters
@@ -31,7 +31,10 @@ class Atrium:
         self.boundary = boundary
         self.pacemaker_line = pacemaker_line
         self.radius = radius
-        self.L = L
+        
+        self.Lx = Lx
+        self.Ly = Ly
+        
         self.nu_para = nu_para
         self.nu_trans = nu_trans
             
@@ -43,14 +46,14 @@ class Atrium:
         self.p_nonfire = p_nonfire
 
         # System cell positions
-        self.index = np.arange(0, L * L)   # cell positions in each array
-        self.position = self.index.reshape(L, L)
+        self.index = np.arange(0, Lx * Ly)   # cell positions in each array
+        self.position = self.index.reshape(Ly, Lx)     # Reshape works as (num rows, num columns)
         inward_current = np.zeros_like(self.index)
 
-        self.first_col = np.arange(0, L * L, L)
-        self.not_first_col = self.index[self.index % L != 0]
-        self.last_col = np.arange(0, L * L, L) + L - 1
-        self.last_row = np.arange((self.L * self.L) - self.L, self.L * self.L)
+        self.first_col = np.arange(0, Lx * Ly, Lx)
+        self.not_first_col = self.index[self.index % Lx != 0]
+        self.last_col = np.arange(0, Lx * Ly, Lx) + Lx - 1
+        self.last_row = np.arange((self.Lx * self.Ly) - self.Lx, self.Lx * self.Ly)
         
         # System seeds
         self.seed_connections = seed_connections
@@ -71,8 +74,8 @@ class Atrium:
         self.set_AF_measuring_vars()
 
         # State of system
-        self.phases = np.full((L * L), fill_value=self.rp)         # state cell is in (0 = excited, rp = resting)
-        self.V = np.full((L * L), fill_value=-90.0)                # voltage depending on state of cell
+        self.phases = np.full((Lx * Ly), fill_value=self.rp)         # state cell is in (0 = excited, rp = resting)
+        self.V = np.full((Lx * Ly), fill_value=-90.0)                # voltage depending on state of cell
         
         # Added by Gwyn for Trial and Error data collection
         self.resting_cells = np.zeros((501))
@@ -81,8 +84,8 @@ class Atrium:
         self.receive_current = 0
         
         self.states = [[]] * self.rp              # list of lists containing cells in each state except resting
-        self.resting = np.full([self.L**2], fill_value=True, dtype=bool)         # can they be excited
-        self.to_be_excited = np.full([self.L**2], fill_value=False, dtype=bool)        # cells to be excited next timestep
+        self.resting = np.full([self.Lx * Ly], fill_value=True, dtype=bool)         # can they be excited
+        self.to_be_excited = np.full([self.Lx * Ly], fill_value=False, dtype=bool)        # cells to be excited next timestep
 
         self.neighbours = None    # Dummy that gets overwritten in create_neighbours
         self.list_of_neighbours = None  # Dummy that gets overwritten in create_neighbours
@@ -96,9 +99,9 @@ class Atrium:
         self.create_pacemaker_cells()
 
     def set_AF_measuring_vars(self):
-        self.excitation_rate = np.zeros(self.L**2, dtype=int)
-        self.last_excitation = np.full((self.L**2), fill_value=-self.pace_rate)
-        self.number_of_excitations = np.zeros(self.L**2, dtype=int)
+        self.excitation_rate = np.zeros(self.Lx * self.Ly, dtype=int)
+        self.last_excitation = np.full((self.Lx * self.Ly), fill_value=-self.pace_rate)
+        self.number_of_excitations = np.zeros(self.Lx * self.Ly, dtype=int)
         self.AF = False
         self.sources = []
         self.t = 0
@@ -108,13 +111,13 @@ class Atrium:
 
     def create_neighbours(self):
         # Setting connections
-        a = np.full((self.L**2), fill_value=None, dtype=float)
+        a = np.full((self.Lx * self.Ly), fill_value=None, dtype=float)
         
         if self.hexagonal:  # if self.hexagonal == True:
             neighbours = np.array([a] * 6)  # up_left, up_right, right, down_right, down_left, left
 
             np.random.seed(self.seed_connections)
-            rand_nums = np.random.rand(3, self.L**2)
+            rand_nums = np.random.rand(3, self.Lx * self.Ly)
 
             num_rand_tran1 = rand_nums[0]
             num_rand_tran2 = rand_nums[1]
@@ -129,43 +132,42 @@ class Atrium:
                         neighbours[5][j + 1] = int(j)
 
                 # even
-                if j in self.position[np.arange(0, self.L, 2)]:
+                if j in self.position[np.arange(0, self.Ly, 2)]:
 
                     if num_rand_tran1[j] <= self.nu_trans:
-
                         if j not in self.first_col:
-                            neighbours[4][j] = j + self.L - 1
-                            neighbours[1][j + self.L - 1] = j
+                            neighbours[4][j] = j + self.Lx - 1
+                            neighbours[1][j + self.Lx - 1] = j
 
                     if num_rand_tran2[j] <= self.nu_trans:
-                        neighbours[3][j] = j + self.L
-                        neighbours[0][j + self.L] = j
+                        neighbours[3][j] = j + self.Lx
+                        neighbours[0][j + self.Lx] = j
 
                 # odd
                 else:
-                #if j in self.position[np.arange(1, L, 2)]:
+                #if j in self.position[np.arange(1, Ly, 2)]:
                     if num_rand_tran1[j] <= self.nu_trans:
                         
                         if j in self.last_row:
                             if self.boundary == True: ### last row
-                                neighbours[4][j] = j - ((self.L * self.L) - self.L)
-                                neighbours[1][j - ((self.L * self.L) - self.L)] = j
+                                neighbours[4][j] = j - ((self.Lx * self.Ly) - self.Lx)
+                                neighbours[1][j - ((self.Lx * self.Ly) - self.Lx)] = j
                             
                         else:
-                            neighbours[4][j] = j + self.L
-                            neighbours[1][j + self.L] = j
+                            neighbours[4][j] = j + self.Lx
+                            neighbours[1][j + self.Lx] = j
                             
 
                     if num_rand_tran2[j] <= self.nu_trans:
                         if j not in self.last_col:
                             if j in self.last_row:
                                 if self.boundary == True:
-                                    neighbours[3][j] = j - ((self.L*self.L) - self.L) + 1
-                                    neighbours[0][j - ((self.L*self.L) - self.L) + 1] = j
+                                    neighbours[3][j] = j - ((self.Lx * self.Ly) - self.Lx) + 1
+                                    neighbours[0][j - ((self.Lx * self.Ly) - self.Lx) + 1] = j
                               
                             else:    
-                                neighbours[3][j] = j + self.L + 1
-                                neighbours[0][j + self.L + 1] = j
+                                neighbours[3][j] = j + self.Lx + 1
+                                neighbours[0][j + self.Lx + 1] = j
                             
             self.list_of_neighbours = [[neighbours[0][i],
                                         neighbours[1][i],
@@ -179,8 +181,8 @@ class Atrium:
             neighbours = np.array([a] * 4)
 
             np.random.seed(self.seed_connections)
-            num_rand_tran = np.random.rand(self.L * self.L)
-            num_rand_para = np.random.rand(self.L * self.L)
+            num_rand_tran = np.random.rand(self.Lx * self.Ly)
+            num_rand_para = np.random.rand(self.Lx * self.Ly)
 
             for j in self.index:
 
@@ -195,8 +197,8 @@ class Atrium:
 
                     if j in self.last_row:
                         if self.boundary == True:
-                            neighbours[2][j] = j - ((self.L * self.L) - self.L)
-                            neighbours[0][j - ((self.L * self.L) - self.L)] = j
+                            neighbours[2][j] = j - ((self.Lx * self.Ly) - self.L)
+                            neighbours[0][j - ((self.Lx * self.Ly) - self.L)] = j
 
                     else:
                         neighbours[2][j] = j + self.L
@@ -212,6 +214,7 @@ class Atrium:
         self.neighbour_list = np.array([np.array([x for x in 
                                  self.list_of_neighbours[i] if str(x) 
                                  != 'nan'],dtype = int) for i in self.index])
+            
     def create_pacemaker_cells(self):
         if self.pacemaker_line == True:
             self.pacemaker_cells = self.first_col
@@ -318,14 +321,14 @@ class Atrium:
 
 class DysfuncModel(Atrium):
     
-    def __init__(self, seed_dysfunc=1, dysfunctional_prob=0.05, hexagonal=False, L=200, rp=50, tot_time=10**6, nu_para=0.6, nu_trans=0.6,
+    def __init__(self, seed_dysfunc=1, dysfunctional_prob=0.05, hexagonal=False, rp=50, tot_time=10**6, nu_para=0.6, nu_trans=0.6,
                  pace_rate=220, p_nonfire=0.05, seed_connections=1, seed_prop=4, boundary=True, pacemaker_line=True, radius = 3):
-        super(DysfuncModel, self).__init__(hexagonal, L, rp, tot_time, nu_para, nu_trans, pace_rate, p_nonfire, seed_connections, seed_prop, boundary, pacemaker_line, radius)     # Calls Atrium init function
+        super(DysfuncModel, self).__init__(hexagonal, rp, tot_time, nu_para, nu_trans, pace_rate, p_nonfire, seed_connections, seed_prop, boundary, pacemaker_line, radius)     # Calls Atrium init function
         
         self.seed_dysfunc = seed_dysfunc
         
         self.dysfunctional_prob = dysfunctional_prob
-        self.dysfunctional_cells = np.full([self.L * self.L], fill_value=False, dtype=bool)
+        self.dysfunctional_cells = np.full([self.Lx * self.Ly], fill_value=False, dtype=bool)
 
         self.set_dysfunctional_cells()
 
@@ -336,7 +339,7 @@ class DysfuncModel(Atrium):
 
     def set_dysfunctional_cells(self):
         np.random.seed(self.seed_dysfunc)
-        num_rand_dysfunc = np.random.rand(self.L * self.L)
+        num_rand_dysfunc = np.random.rand(self.Lx * self.Ly)
 
         for j in self.index:
             if self.dysfunctional_prob <= num_rand_dysfunc[j]:  # functional
@@ -386,10 +389,10 @@ class DysfuncModel(Atrium):
 
 class SourceSinkModel(Atrium):
     
-    def __init__(self, threshold=0.75, hexagonal=False, L=100, rp=30, tot_time=10**6, nu_para=1, nu_trans=1,
+    def __init__(self, threshold=0.75, hexagonal=False, Lx = 100, Ly = 150, rp=30, tot_time=10**6, nu_para=1, nu_trans=1,
                  pace_rate=220, p_nonfire=0.75, seed_connections=1, seed_prop=4, boundary=True, pacemaker_line=True, radius=3):
 
-        super(SourceSinkModel, self).__init__(hexagonal, L, rp, tot_time, nu_para, nu_trans, pace_rate, p_nonfire, seed_connections, seed_prop, boundary, pacemaker_line, radius)       # Calls Atrium init function
+        super(SourceSinkModel, self).__init__(hexagonal, Lx, Ly, rp, tot_time, nu_para, nu_trans, pace_rate, p_nonfire, seed_connections, seed_prop, boundary, pacemaker_line, radius)       # Calls Atrium init function
 
         self.threshold = threshold
 
@@ -401,7 +404,7 @@ class SourceSinkModel(Atrium):
         self.to_be_excited[location_of_cells] = True
 
     def get_inward_current(self, neighbours_list,resting_neighbours):
-        inward_current = np.zeros(self.L**2)
+        inward_current = np.zeros(self.Lx * self.Ly)
         
         for i in neighbours_list:
 
