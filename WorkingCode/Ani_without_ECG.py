@@ -29,17 +29,19 @@ from matplotlib import collections
 ###############################################################################
 # Initiating the Atrium
 
-convolve = True
+convolve = False
 grey_background = True
 resting_cells = True
 
-seed1 = 19298298
-seed2 = 18822023
-nu = 0.55
+seed1 = 7249904
+seed2 = 3522140
+nu = 0.5
 
-A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.03, pace_rate= 121,
-                       Lx=100, Ly=150, tot_time= 2230, nu_para=nu, nu_trans=nu, rp = 120,
-                       seed_connections=seed1, seed_prop=seed2, boundary = True, pacemaker_line = True, radius = 3)
+
+A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.05, pace_rate= 91,
+                       L=100, tot_time= 1300, nu_para=nu, nu_trans=nu, rp = 90,
+                       seed_connections=seed1, seed_prop=seed2, boundary = True, pacemaker_line = True, radius = 3, charge_conservation = False)
+
 
 
 ###############################################################################
@@ -59,6 +61,7 @@ def update_hex(frame_number, collection, A, convolve):    # Frame number passed 
     
     A.cmp_animation()
     
+
     
 #    A.resting_cells_over_time_collect()
     
@@ -113,7 +116,13 @@ def update_hex(frame_number, collection, A, convolve):    # Frame number passed 
         
     # WITHOUT CONVOLUTION
     else:
-        collection.set_array(np.array(A.phases))
+        if grey_background:
+            mx = np.array(A.phases.reshape([A.L, A.L]) == A.rp)
+            data = np.ma.masked_array(A.phases,mx)
+            collection.set_array(data)
+        
+        else: 
+            collection.set_array(np.array(A.phases))
 
 
     ax1.set_title('refractory period = %i, threshold = %0.2f, \nseed connection = %i, seed propagation = %i, pace_rate = %i \nnu = %0.3f, p not fire = %0.3f, t = %i' % (A.rp, A.threshold, A.seed_connections, A.seed_prop, A.pace_rate, A.nu_para, A.p_nonfire, A.t), fontsize=20)
@@ -231,7 +240,9 @@ if A.hexagonal:
 
 ###SAVING VIDEO###
 
+
 #ani.save('(Video 5) Pacing then increase rp and increase p slowly.mp4', fps=30)
+
 
 #file_path = "NewVid.mp4"
 #folder_id = "1zpBUFJO6XAkmoWuWnWGRsj6O6oJCwYI0"      ### Folder ID for AF_Stuff folder
