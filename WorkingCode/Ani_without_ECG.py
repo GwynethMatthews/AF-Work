@@ -30,7 +30,7 @@ from matplotlib import collections
 # Initiating the Atrium
 
 convolve = True
-grey_background = True
+grey_background = False
 resting_cells = False
 
 seed1 = 19298298
@@ -113,6 +113,7 @@ def update_hex(frame_number, collection, A, convolve):    # Frame number passed 
 
     ax1.set_title('refractory period = %i, threshold = %0.2f, \nseed connection = %i, seed propagation = %i, pace_rate = %i \nnu = %0.3f, p not fire = %0.3f, t = %i' % (A.rp, A.threshold, A.seed_connections, A.seed_prop, A.pace_rate, A.nu_para, A.p_nonfire, A.t), fontsize=20)
     ax1.title.set_position([0.5, 0.85])
+    
     if resting_cells == True:
         A.resting_cells = np.roll(A.resting_cells, -1)
         A.resting_cells[-1] = len(A.resting[A.resting == True])
@@ -225,7 +226,7 @@ if A.hexagonal:
 
 ###SAVING VIDEO###
 
-ani.save('(Video 5) Pacing then increase rp and increase p slowly.mp4', fps=30)
+#ani.save('(Video 5) Pacing then increase rp and increase p slowly.mp4', fps=30)
 
 #file_path = "NewVid.mp4"
 #folder_id = "1zpBUFJO6XAkmoWuWnWGRsj6O6oJCwYI0"      ### Folder ID for AF_Stuff folder
