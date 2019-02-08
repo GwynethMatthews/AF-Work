@@ -88,6 +88,9 @@ class Atrium:
         self.time_for_graphs = np.arange(-500,1,1)
         self.resting_cells_over_time = []
         self.receive_current = 0
+        self.fail_safe = False
+        self.time_extinguished = 0
+        self.stop = False
         
         self.states = [[]] * self.rp              # list of lists containing cells in each state except resting
         self.t_under_states = [[]] * self.t_under
