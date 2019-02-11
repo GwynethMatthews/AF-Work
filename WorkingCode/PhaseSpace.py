@@ -24,12 +24,11 @@ def OnePacemakerBeat(parameters=input_param, seeds=input_seeds, itr=job_number):
             pace = tau + parameters[itr][l][4]
             
             A = AF.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=p, pace_rate=pace,
-                       L=100, tot_time=10000, nu_para=nu, nu_trans=nu, rp=tau,
+                       Lx=100, Ly=100, tot_time=10000, nu_para=nu, nu_trans=nu, rp=tau,
                        seed_connections=seeds[itr][l][i][0], seed_prop=seeds[itr][l][i][1], 
-                       boundary=True, pacemaker_line=True,radius = 3, charge_conservation = False,
-                       t_under = 1, t_under_on = t_under_on)
+                       charge_conservation = False, t_under = 1, t_under_on = t_under_on)
 
-            AF_start = int((10 * pace) + (2.5 * A.L))# A.tot_time # what is this for?
+            AF_start = int((10 * pace) + (2.5 * A.L))
 
             np.random.seed(A.seed_prop)
 
@@ -42,14 +41,8 @@ def OnePacemakerBeat(parameters=input_param, seeds=input_seeds, itr=job_number):
                         if A.t < 10 * pace:
                             A.cmp_timestep()
                     
-                        else:
-                        #if A.t > int((10 * pace) + (2.5 * A.L)):
-                            
-                            #A.AF = True # Got rid of because it makes the condition below redundant 
-                            #AF_start = A.t # This will update every loop so have just set it to int((10 * pace) + (2.5 * A.L))
-                        
+                        else:                        
                             A.cmp_no_sinus() 
-                        #A.cmp_no_timestep() # Assumed this was meant to be A.cmp_no_sinus()
 
                     else:
                         A.fail_safe = True
