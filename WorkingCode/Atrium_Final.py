@@ -416,7 +416,7 @@ class SourceSinkModel(Atrium):
         self.to_be_excited[location_of_cells] = True
 
 
-    def get_inward_current(self, neighbours_list,resting_neighbours):
+    def get_inward_current(self, neighbours_list,resting_neighbours,excited_cells):
         inward_current = np.zeros(self.Lx * self.Ly)
         if self.charge_conservation == True:
             j = 0

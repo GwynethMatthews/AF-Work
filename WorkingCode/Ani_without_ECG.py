@@ -31,7 +31,7 @@ from matplotlib import collections
 
 convolve = False
 grey_background = True
-resting_cells = True
+resting_cells = False
 
 seed1 = 7249904
 seed2 = 3522140
@@ -39,7 +39,7 @@ nu = 0.5
 
 
 A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.05, pace_rate= 91,
-                       L=100, tot_time= 1300, nu_para=nu, nu_trans=nu, rp = 90,
+                        Lx = 100, Ly = 100, tot_time= 1300, nu_para=nu, nu_trans=nu, rp = 90,
                        seed_connections=seed1, seed_prop=seed2, boundary = True, pacemaker_line = True, radius = 3, charge_conservation = False)
 
 
@@ -117,7 +117,7 @@ def update_hex(frame_number, collection, A, convolve):    # Frame number passed 
     # WITHOUT CONVOLUTION
     else:
         if grey_background:
-            mx = np.array(A.phases.reshape([A.L, A.L]) == A.rp)
+            mx = np.array(A.phases.reshape([A.Ly, A.Lx]) == A.rp)
             data = np.ma.masked_array(A.phases,mx)
             collection.set_array(data)
         
@@ -132,11 +132,11 @@ def update_hex(frame_number, collection, A, convolve):    # Frame number passed 
         A.resting_cells = np.roll(A.resting_cells, -1)
         A.resting_cells[-1] = len(A.resting[A.resting == True])
         ax2.clear()
-        ax2.plot(A.time_for_graphs, A.resting_cells)
+        ax2.plot(A.time_for_graphs, A.resting_cells/(A.Lx*A.Ly))
         ax2.set_xlim(-500,0) 
         #ax2.set_ylim(-400,400)
         ax2.set_xlabel('Time')
-        ax2.set_ylabel('Number of cells')
+        ax2.set_ylabel('Fraction of resting cells')
     
     return ax1,
 
