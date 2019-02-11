@@ -482,19 +482,21 @@ class SourceSinkModel(Atrium):
         return neighbours_list, resting_neighbours
     
     def reset_cells(self):
-        self.inward_current[self.zero_current] = 0
+        if self.t_under_on == True:
+            self.inward_current[self.zero_current] = 0
+        
+        if self.t_under_on == False:
+            self.inward_current = np.zeros(self.L**2)
+        
 
 
     def conduct(self, excited_cells):
         neighbours_list, resting_neighbours = self.find_resting_neighbours(excited_cells)
-        #print(self.inward_current.reshape(self.L, self.L))
-        if self.t_under_on == True:
-            self.reset_cells()
-        if self.t_under_on == False:
-            self.inward_current = np.zeros(self.L**2)
-        #print(self.inward_current.reshape(self.L, self.L))
+        
+        self.reset_cells()
+        
         self.get_inward_current(neighbours_list,resting_neighbours,excited_cells)  # amount of current received
-        #print(self.inward_current.reshape(self.L, self.L))
+        
         receive_current = self.index[self.inward_current > 0]  # Indices which receive any current from neighbours
         
         hit_thresh_so_excite = receive_current[self.inward_current[receive_current] >= self.threshold]
