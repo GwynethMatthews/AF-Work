@@ -29,18 +29,18 @@ from matplotlib import collections
 ###############################################################################
 # Initiating the Atrium
 
-convolve = True
+convolve = False
 grey_background = True
-resting_cells = True
+resting_cells = False
 
-seed1 = 1241331
-seed2 = 45756776
-nu = 0.48
+seed1 = 7249904
+seed2 = 3522140
+nu = 0.5
 
-A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.015, pace_rate= 92,
-                       Lx=100, Ly=150, tot_time= 10000, nu_para=nu, nu_trans=nu, rp = 90,
-                       seed_connections=seed1, seed_prop=seed2, boundary = True, pacemaker_line = True)
 
+A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.05, pace_rate= 91,
+                        Lx=100, Ly=100, tot_time=1300, nu_para=nu, nu_trans=nu, rp=90,
+                       seed_connections=seed1, seed_prop=seed2, charge_conservation=False)
 
 ###############################################################################
 # Animation function
@@ -62,6 +62,7 @@ def update_hex(frame_number, collection, A, convolve):    # Frame number passed 
     else:
         A.cmp_animation()
     
+
     
 #    A.resting_cells_over_time_collect()
     
@@ -116,7 +117,13 @@ def update_hex(frame_number, collection, A, convolve):    # Frame number passed 
         
     # WITHOUT CONVOLUTION
     else:
-        collection.set_array(np.array(A.phases))
+        if grey_background:
+            mx = np.array(A.phases.reshape([A.Ly, A.Lx]) == A.rp)
+            data = np.ma.masked_array(A.phases,mx)
+            collection.set_array(data)
+        
+        else: 
+            collection.set_array(np.array(A.phases))
 
 
     ax1.set_title('refractory period = %i, threshold = %0.2f, \nseed connection = %i, seed propagation = %i, pace_rate = %i \nnu = %0.3f, p not fire = %0.3f, t = %i' % (A.rp, A.threshold, A.seed_connections, A.seed_prop, A.pace_rate, A.nu_para, A.p_nonfire, A.t), fontsize=20)
@@ -126,11 +133,13 @@ def update_hex(frame_number, collection, A, convolve):    # Frame number passed 
         A.resting_cells = np.roll(A.resting_cells, -1)
         A.resting_cells[-1] = len(A.resting[A.resting == True])
         ax2.clear()
-        ax2.plot(A.time_for_graphs, A.resting_cells / (A.Lx * A.Ly))
+
+        ax2.plot(A.time_for_graphs, A.resting_cells/(A.Lx * A.Ly))
+
         ax2.set_xlim(-500,0) 
         #ax2.set_ylim(-400,400)
         ax2.set_xlabel('Time')
-        ax2.set_ylabel('Number of cells')
+        ax2.set_ylabel('Fraction of resting cells')
     
     return ax1,
 
@@ -234,7 +243,9 @@ if A.hexagonal:
 
 ###SAVING VIDEO###
 
+
 #ani.save('(Video 5) Pacing then increase rp and increase p slowly.mp4', fps=30)
+
 
 #file_path = "NewVid.mp4"
 #folder_id = "1zpBUFJO6XAkmoWuWnWGRsj6O6oJCwYI0"      ### Folder ID for AF_Stuff folder
