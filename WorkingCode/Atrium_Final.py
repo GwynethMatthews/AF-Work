@@ -23,10 +23,13 @@ class Atrium:
     pacemaker_line: True for first column, False for quarter circle corner
     radius: size of square SA node if pacemaker_line == False
     charge_conservation: if True then an excited cell with inward_current > threshold gives inward_current/N to each resting neighbour, if False gives 1/N
+    t_under_on: whether or not the inward_current is kept if the cell doesn't reach the threshold
+    t_under: the time the current is kept for
     """
 
-    def __init__(self, hexagonal=False, Lx=100, Ly = 150, rp=50, tot_time=10**6, nu_para=0.6, nu_trans=0.6,
-                 pace_rate=220, p_nonfire=0.25, seed_connections=1, seed_prop=4, boundary=False, pacemaker_line = True, radius = 3, charge_conservation = True):
+    def __init__(self, hexagonal=False, Lx=200, Ly=200, rp=50, tot_time=10**6, nu_para=0.6, nu_trans=0.6,
+                 pace_rate=220, p_nonfire=0.25, seed_connections=1, seed_prop=4, boundary=False,
+                 pacemaker_line = True, radius = 3, charge_conservation = True, t_under_on = False, t_under = 3):
 
         global inward_current
         # System Parameters
@@ -34,12 +37,14 @@ class Atrium:
         self.boundary = boundary
         self.pacemaker_line = pacemaker_line
         self.radius = radius
-
         
         self.Lx = Lx
         self.Ly = Ly
         
         self.charge_conservation = charge_conservation
+
+        self.t_under_on = t_under_on
+        self.t_under = t_under
 
         self.nu_para = nu_para
         self.nu_trans = nu_trans
@@ -73,8 +78,9 @@ class Atrium:
         self.excitation_rate = None
         self.last_excitation = None
         self.number_of_excitations = None
-        #self.inward_current = None
-
+        self.inward_current = np.zeros_like(self.index, dtype = float)
+        self.zero_current = np.full([self.Lx*self.Ly], fill_value=True, dtype=bool) 
+        
         self.AF = None
         self.sources = None
         self.t = None
@@ -92,10 +98,17 @@ class Atrium:
         self.time_for_graphs = np.arange(-500,1,1)
         self.resting_cells_over_time = []
         self.receive_current = 0
+        self.fail_safe = False
+        self.time_extinguished = 0
+        self.stop = False
         
         self.states = [[]] * self.rp              # list of lists containing cells in each state except resting
+
         self.resting = np.full([self.Lx * Ly], fill_value=True, dtype=bool)         # can they be excited
         self.to_be_excited = np.full([self.Lx * Ly], fill_value=False, dtype=bool)        # cells to be excited next timestep
+
+        self.t_under_states = [[]] * self.t_under
+
 
         self.neighbours = None    # Dummy that gets overwritten in create_neighbours
         self.list_of_neighbours = None  # Dummy that gets overwritten in create_neighbours
@@ -113,6 +126,7 @@ class Atrium:
         self.excitation_rate = np.zeros(self.Lx * self.Ly, dtype=int)
         self.last_excitation = np.full((self.Lx * self.Ly), fill_value=-self.pace_rate)
         self.number_of_excitations = np.zeros(self.Lx * self.Ly, dtype=int)
+
 
         self.AF = False
         self.sources = []
@@ -187,7 +201,6 @@ class Atrium:
                                         neighbours[3][i],
                                         neighbours[4][i],
                                         neighbours[5][i]] for i in self.index]
-
             
         else:    # Square lattice
             neighbours = np.array([a] * 4)
@@ -209,12 +222,12 @@ class Atrium:
 
                     if j in self.last_row:
                         if self.boundary == True:
-                            neighbours[2][j] = j - ((self.Lx * self.Ly) - self.L)
-                            neighbours[0][j - ((self.Lx * self.Ly) - self.L)] = j
+                            neighbours[2][j] = j - ((self.Lx * self.Ly) - self.Lx)
+                            neighbours[0][j - ((self.Lx * self.Ly) - self.Lx)] = j
 
                     else:
-                        neighbours[2][j] = j + self.L
-                        neighbours[0][j + self.L] = j
+                        neighbours[2][j] = j + self.Lx
+                        neighbours[0][j + self.Lx] = j
 
             self.list_of_neighbours = [[neighbours[0][i],
                                         neighbours[1][i],
@@ -232,7 +245,7 @@ class Atrium:
             self.pacemaker_cells = self.first_col
             
         else:
-            self.pacemaker_cells = np.concatenate([np.arange(self.radius) + (self.L*i) for i in range(self.radius)])
+            self.pacemaker_cells = np.concatenate([np.arange(self.radius) + (self.Lx*i) for i in range(self.radius)])    ### Might be Ly???
 
     def change_resting_cells(self):
         self.resting[self.to_be_excited] = False    # Sets recently excited cells to False (not resting)
@@ -302,9 +315,6 @@ class Atrium:
         self.t += 1
 
     def cmp_animation(self):
-
-        self.sinus_rhythm()
-
         self.phases[~self.resting] += 1        
         self.phases[self.to_be_excited] = 0  # Needed for animation
 
@@ -401,10 +411,10 @@ class DysfuncModel(Atrium):
 
 class SourceSinkModel(Atrium):
     
-    def __init__(self, threshold=0.75, hexagonal=False, Lx = 100, Ly = 150, rp=30, tot_time=10**6, nu_para=1, nu_trans=1,
-                 pace_rate=220, p_nonfire=0.75, seed_connections=1, seed_prop=4, boundary=True, pacemaker_line=True, radius=3, charge_conservation = True):
+    def __init__(self, threshold=0.75, hexagonal=False, Lx=100, Ly=100, rp=30, tot_time=10**6, nu_para=1, nu_trans=1,
+                 pace_rate=220, p_nonfire=0.75, seed_connections=1, seed_prop=4, boundary=True, pacemaker_line=True, radius=3, charge_conservation = False, t_under_on = False, t_under = 3):
 
-        super(SourceSinkModel, self).__init__(hexagonal, Lx, Ly, rp, tot_time, nu_para, nu_trans, pace_rate, p_nonfire, seed_connections, seed_prop, boundary, pacemaker_line, radius, charge_conservation)       # Calls Atrium init function
+        super(SourceSinkModel, self).__init__(hexagonal, Lx, Ly, rp, tot_time, nu_para, nu_trans, pace_rate, p_nonfire, seed_connections, seed_prop, boundary, pacemaker_line, radius, charge_conservation, t_under_on, t_under)       # Calls Atrium init function
 
         self.threshold = threshold
 
@@ -417,65 +427,96 @@ class SourceSinkModel(Atrium):
 
 
     def get_inward_current(self, neighbours_list,resting_neighbours,excited_cells):
-        inward_current = np.zeros(self.Lx * self.Ly)
+
         if self.charge_conservation == True:
             j = 0
+            
             for i in neighbours_list:
                 if len(i) != 0:
-                    print(inward_current[i])
-                    inward_current[i] += float(self.current[excited_cells[j]])/ len(i)
-                    print(self.current[excited_cells[j]])
-                    print(inward_current[i])
+                    self.inward_current[i] += float(self.current[excited_cells[j]])/ len(i)
+
                 j += 1
         else:
             for i in neighbours_list:
                 if len(i) != 0:
-                    print(inward_current[i])
-                    inward_current[i] += float(1)/ len(i)
-                    print(inward_current[i])
-        return inward_current
+                    self.inward_current[i] += float(1)/ len(i)
+                    
+        #return inward_current
 
-    def cells_miss_threshold_p_constant(self, receive_current, inward_current):
+    def cycle_through_t_under_states(self,keep_current):
+        self.zero_current[self.t_under_states[-1]] = True
+        self.zero_current[self.states[0]] = True
+        
+        del self.t_under_states[-1]
+        
+        self.t_under_states.insert(0, keep_current) 
+        
+        self.zero_current[self.t_under_states[0]] = False 
+        
+    def cells_miss_threshold_p_constant(self, receive_current):
         """Returns the cells which are excited even though they receive less than the threshold. 
         Probability of excitation is constant"""
-        possible_excited = receive_current[inward_current[receive_current] < self.threshold]
+        possible_excited = receive_current[self.inward_current[receive_current] < self.threshold]
 
         miss_threshold_fire_rand_nums = np.random.rand(len(possible_excited))
 
-        possible_excited = possible_excited[miss_threshold_fire_rand_nums > self.p_nonfire**(inward_current[possible_excited])]  # Fire if over p_nonfire
-
-        return possible_excited
-
-    def cells_miss_threshold_as_a_function(self, receive_current, inward_current):
-        """Returns the cells which are excited even though they receive less than the threshold. 
-        Probability of excitation is 1 - (p_nonfire to the power of the current received)"""
-        possible_excited = receive_current[inward_current[receive_current] < self.threshold]
-
-        miss_threshold_fire_rand_nums = np.random.rand(len(possible_excited))
-        possible_excited = possible_excited[miss_threshold_fire_rand_nums > self.p_nonfire**(inward_current[possible_excited])]
+        possible_excited = possible_excited[miss_threshold_fire_rand_nums > self.p_nonfire**(self.inward_current[possible_excited])]  # Fire if over p_nonfire
+        
+        if self.t_under_on == True: 
+            keep_current = possible_excited[miss_threshold_fire_rand_nums <= self.p_nonfire]
+            
+            self.cycle_through_t_under_states(keep_current)
         
         return possible_excited
-    
+
+    def cells_miss_threshold_as_a_function(self, receive_current):
+        """Returns the cells which are excited even though they receive less than the threshold. 
+        Probability of excitation is 1 - (p_nonfire to the power of the current received)"""
+        possible_excited = receive_current[self.inward_current[receive_current] < self.threshold]
+
+        miss_threshold_fire_rand_nums = np.random.rand(len(possible_excited))
+        get_excited = possible_excited[miss_threshold_fire_rand_nums > self.p_nonfire**(self.inward_current[possible_excited])]
+        
+        if self.t_under_on == True: 
+            keep_current = possible_excited[miss_threshold_fire_rand_nums <= self.p_nonfire**(self.inward_current[possible_excited])]
+        
+            self.cycle_through_t_under_states(keep_current)
+        
+        return get_excited            
+
     def find_resting_neighbours(self, excited_cells):
         neighbours_list = [j[self.resting[j]] for j in self.neighbour_list[excited_cells]]
 
         resting_neighbours = list(map(len, neighbours_list))
 
         return neighbours_list, resting_neighbours
+    
+    def reset_cells(self):
+        if self.t_under_on == True:
+            self.inward_current[self.zero_current] = 0
+        
+        if self.t_under_on == False:
+            self.inward_current = np.zeros(self.Lx*self.Ly)
+        
+
 
     def conduct(self, excited_cells):
         neighbours_list, resting_neighbours = self.find_resting_neighbours(excited_cells)
         
-        inward_current = self.get_inward_current(neighbours_list,resting_neighbours,excited_cells)  # amount of current received
-
-        receive_current = self.index[inward_current > 0]  # Indices which receive any current from neighbours
+        self.reset_cells()
         
-        hit_thresh_so_excite = receive_current[inward_current[receive_current] >= self.threshold]
-        miss_thresh_but_still_excite = self.cells_miss_threshold_as_a_function(receive_current, inward_current)
+        self.get_inward_current(neighbours_list,resting_neighbours,excited_cells)  # amount of current received
+        
+        receive_current = self.index[self.inward_current > 0]  # Indices which receive any current from neighbours
+        
+        hit_thresh_so_excite = receive_current[self.inward_current[receive_current] >= self.threshold]
+        miss_thresh_but_still_excite = self.cells_miss_threshold_as_a_function(receive_current)
+        
         if self.charge_conservation == True:
             self.current = np.ones_like(self.index, dtype = float)
-            self.current[hit_thresh_so_excite] = inward_current[hit_thresh_so_excite]
-            #self.current[miss_thresh_but_still_excite] = inward_current[miss_thresh_but_still_excite]
+            self.current[hit_thresh_so_excite] = self.inward_current[hit_thresh_so_excite]
+            #self.current[miss_thresh_but_still_excite] = self.inward_current[miss_thresh_but_still_excite]
+        
         self.to_be_excited[miss_thresh_but_still_excite] = True
         self.to_be_excited[hit_thresh_so_excite] = True
         
