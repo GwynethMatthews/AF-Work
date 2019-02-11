@@ -29,18 +29,20 @@ from matplotlib import collections
 ###############################################################################
 # Initiating the Atrium
 
-convolve = False
-grey_background = True
+convolve = True
+grey_background = False
 resting_cells = False
 
 seed1 = 7249904
 seed2 = 3522140
-nu = 0.5
+nu = 0.4
 
+A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.5, pace_rate= 91,
+                       L=100, tot_time= 13000, nu_para=nu, nu_trans=nu, rp = 90,
+                       seed_connections=seed1, seed_prop=seed2, boundary = True, 
+                       pacemaker_line = True, radius = 3, charge_conservation = False,
+                       t_under = 1, t_under_on = True)
 
-A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.05, pace_rate= 91,
-                        Lx=100, Ly=100, tot_time=1300, nu_para=nu, nu_trans=nu, rp=90,
-                       seed_connections=seed1, seed_prop=seed2, charge_conservation=False)
 
 ###############################################################################
 # Animation function
@@ -61,10 +63,18 @@ def update_hex(frame_number, collection, A, convolve):    # Frame number passed 
         
     else:
         A.cmp_animation()
-    
 
-    
-#    A.resting_cells_over_time_collect()
+    ### CHANGING P_NONFIRE (smaller p_nonfire makes it more likely to fire) ###
+#    if A.t in np.arange(1210, 1210 + 200*4, 200 ):
+#        A.p_nonfire -= 0.01
+#    ### Note if p is decreasing can have errors when it reaches 0, fixed if set time for p_nonfire = 0 ###
+       
+#    if A.t == 1200:
+#        fig2 = plt.figure(2)
+#        ax3 = fig2.subplots(1, 1)
+#        x = np.bincount(A.excitation_rate)
+#        ax3.scatter(np.arange(len(x)), x, label = 't = 1200')
+#        ax3.plot([90,90], [0,2180]
     
 #        ### CHANGING REFRACTORY PERIOD ###
 #    if A.t == 10*A.pace_rate:
