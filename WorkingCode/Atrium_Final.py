@@ -175,7 +175,6 @@ class Atrium:
                                         neighbours[3][i],
                                         neighbours[4][i],
                                         neighbours[5][i]] for i in self.index]
-
             
         else:    # Square lattice
             neighbours = np.array([a] * 4)
@@ -290,9 +289,6 @@ class Atrium:
         self.t += 1
 
     def cmp_animation(self):
-
-        self.sinus_rhythm()
-
         self.phases[~self.resting] += 1        
         self.phases[self.to_be_excited] = 0  # Needed for animation
 

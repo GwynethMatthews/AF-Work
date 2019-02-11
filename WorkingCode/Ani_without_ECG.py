@@ -33,13 +33,13 @@ convolve = True
 grey_background = True
 resting_cells = True
 
-seed1 = 19298298
-seed2 = 18822023
-nu = 0.55
+seed1 = 1241331
+seed2 = 45756776
+nu = 0.48
 
-A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.03, pace_rate= 121,
-                       Lx=100, Ly=150, tot_time= 2230, nu_para=nu, nu_trans=nu, rp = 120,
-                       seed_connections=seed1, seed_prop=seed2, boundary = True, pacemaker_line = True, radius = 3)
+A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.015, pace_rate= 92,
+                       Lx=100, Ly=150, tot_time= 10000, nu_para=nu, nu_trans=nu, rp = 90,
+                       seed_connections=seed1, seed_prop=seed2, boundary = True, pacemaker_line = True)
 
 
 ###############################################################################
@@ -51,13 +51,16 @@ A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.03, pace_rate= 1
 def update_hex(frame_number, collection, A, convolve):    # Frame number passed as default so needed
     """Next frame update for animation without ECG"""
 
-#    if A.t < 10*A.pace_rate:    ### Change multiplier to change number of paces
-#        A.sinus_rhythm()
 #    if A.t % A.pace_rate == 0:
 #        A.ectopic_beat([4950,4951,5049,5050,5051,5150,5151])
     
     
-    A.cmp_animation()
+    if A.t < 7 * A.pace_rate:    ### Change multiplier to change number of paces
+        A.sinus_rhythm()
+        A.cmp_animation()    # Doesn't have a sinus rhythm
+        
+    else:
+        A.cmp_animation()
     
     
 #    A.resting_cells_over_time_collect()
@@ -123,7 +126,7 @@ def update_hex(frame_number, collection, A, convolve):    # Frame number passed 
         A.resting_cells = np.roll(A.resting_cells, -1)
         A.resting_cells[-1] = len(A.resting[A.resting == True])
         ax2.clear()
-        ax2.plot(A.time_for_graphs, A.resting_cells)
+        ax2.plot(A.time_for_graphs, A.resting_cells / (A.Lx * A.Ly))
         ax2.set_xlim(-500,0) 
         #ax2.set_ylim(-400,400)
         ax2.set_xlabel('Time')
