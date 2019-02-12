@@ -7,7 +7,7 @@ job_number = int(sys.argv[1])
 input_param = np.load('parameters.npy')
 input_seeds = np.load('seeds.npy')
 
-def OnePacemakerBeat(parameters=input_param, seeds=input_seeds, itr=job_number):
+def OnePacemakerBeat(parameters, seeds, itr):
     data_full = []
     
     #nu = 0.55
@@ -15,8 +15,8 @@ def OnePacemakerBeat(parameters=input_param, seeds=input_seeds, itr=job_number):
     for l in range(len(parameters[itr])):
         repeat_data = []
 	#print(l)
-        for i in range(1):  ### Number of repeats   
-            
+        for i in range(2):  ### Number of repeats   
+            #print(parameters[itr][l])
             nu = parameters[itr][l][0]
             tau = int(parameters[itr][l][1])
             p = parameters[itr][l][2]
@@ -28,39 +28,55 @@ def OnePacemakerBeat(parameters=input_param, seeds=input_seeds, itr=job_number):
                        seed_connections=seeds[itr][l][i][0], seed_prop=seeds[itr][l][i][1], 
                        charge_conservation = False, t_under = 1, t_under_on = t_under_on)
 
-            AF_start = int((10 * pace) + (2.5 * A.L))
+            AF_start = int((10 * pace) + (2.5 * A.Lx))
 
             np.random.seed(A.seed_prop)
 
             A.cmp_timestep()   ### With one sinus beat       
             
             while A.stop == False:
-                if len(A.states[0]) != 0:
+                
+                if A.t < A.tot_time:
                     
-                    if A.t < A.tot_time:
-                        if A.t < 10 * pace:
-                            A.cmp_timestep()
+                    if A.t < 10 * pace:
+                        A.cmp_timestep()
+                        
                     
-                        else:                        
-                            A.cmp_no_sinus() 
-
                     else:
-                        A.fail_safe = True
-                        A.time_extinguished = A.t
-                        A.stop = True
-
+                        if len(A.states[0]) != 0:                        
+                            A.cmp_no_sinus()
+                            
+                            if A.t > AF_start:
+                                A.t_AF += 1
+                                #print('AF')
+                        else:
+                            A.time_extinguished = A.t
+                            A.stop = True
+                            
                 else:
+                    A.fail_safe = True
                     A.time_extinguished = A.t
                     A.stop = True
                     
-            A.t_AF = int(A.time_extinguished - AF_start)
+
+
+                    
+            #A.t_AF = int(A.time_extinguished - AF_start)
             
             if A.t_AF > 0:
                 A.AF = True
                     
-            # nu, tau, p,whether the charge under threshold is conserved, pace_rate, repeat number, s1, s2,
-            # A.fail_safe = whether it extinguishes at before tot_time, A.AF = whether it
-            # eneters AF, A.t_AF = how long it was in AF for, 
+            # nu
+            # tau
+            # p
+            # whether the charge under threshold is conserved
+            # pace_rate
+            # repeat number
+            # seed_connection
+            # seed_propagation
+            # A.fail_safe = whether it extinguishes at tot_time
+            # A.AF = whether it eneters AF
+            # A.t_AF = how long it was in AF for
             # A.time_extinguished = time wave is extinguished == tot_time if doesn't terminate
 
             data = np.array([parameters[itr][l][0]*100, parameters[itr][l][1]*100, parameters[itr][l][2]*100, 
@@ -87,7 +103,7 @@ for m in [True, False]:
                     parameters.extend([[i,j,k,m,n]])
             
 parameters = np.array(parameters).reshape((800,15,5))
-s = np.random.randint(0, 2**31, (800, 15, 5, 2),dtype='int')
+s = np.random.randint(0, 2**31, (800, 15, 2, 2),dtype='int')
 
 #np.save('parameters', parameters)
 #np.save('seeds', s)

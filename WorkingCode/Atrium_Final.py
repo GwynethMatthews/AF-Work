@@ -298,10 +298,6 @@ class Atrium:
     def conduct(self):
         return None   # Dummy that gets overriden by inheriting classes
 
-    def cmp_timestep(self):
-        self.sinus_rhythm() # Now checks if correct time inside this function
-        self.cmp_no_sinus
-        
     def cmp_no_sinus(self):
         self.relaxing()    # Changes self.states, cycles cells through the refractory states
 
@@ -313,6 +309,12 @@ class Atrium:
 
         self.time_in_AF(excited_cells)
         self.t += 1
+
+        
+    def cmp_timestep(self):
+        self.sinus_rhythm() # Now checks if correct time inside this function
+        self.cmp_no_sinus()
+
 
     def cmp_animation(self):
         self.phases[~self.resting] += 1        
