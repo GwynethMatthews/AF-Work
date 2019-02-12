@@ -2,21 +2,23 @@
 import numpy as np
 import sys
 import Atrium_Final as AF
-job_number = int(sys.argv[1])
+#job_number = int(sys.argv[1])
+job_number = 280
 
 input_param = np.load('parameters.npy')
 input_seeds = np.load('seeds.npy')
 
+print(np.shape(input_param))
+
 def OnePacemakerBeat(parameters, seeds, itr):
     data_full = []
     
-    #nu = 0.55
-
     for l in range(len(parameters[itr])):
         repeat_data = []
-	#print(l)
+        print(l)
+        
         for i in range(2):  ### Number of repeats   
-            #print(parameters[itr][l])
+
             nu = parameters[itr][l][0]
             tau = int(parameters[itr][l][1])
             p = parameters[itr][l][2]
@@ -35,12 +37,9 @@ def OnePacemakerBeat(parameters, seeds, itr):
             A.cmp_timestep()   ### With one sinus beat       
             
             while A.stop == False:
-                
                 if A.t < A.tot_time:
-                    
                     if A.t < 10 * pace:
                         A.cmp_timestep()
-                        
                     
                     else:
                         if len(A.states[0]) != 0:                        
@@ -57,9 +56,6 @@ def OnePacemakerBeat(parameters, seeds, itr):
                     A.fail_safe = True
                     A.time_extinguished = A.t
                     A.stop = True
-                    
-
-
                     
             #A.t_AF = int(A.time_extinguished - AF_start)
             
@@ -79,7 +75,7 @@ def OnePacemakerBeat(parameters, seeds, itr):
             # A.t_AF = how long it was in AF for
             # A.time_extinguished = time wave is extinguished == tot_time if doesn't terminate
 
-            data = np.array([parameters[itr][l][0]*100, parameters[itr][l][1]*100, parameters[itr][l][2]*100, 
+            data = np.array([parameters[itr][l][0]*100, parameters[itr][l][1], parameters[itr][l][2]*100, 
                              parameters[itr][l][3], A.pace_rate, i, A.seed_connections, A.seed_prop,
                              A.fail_safe, A.AF, A.t_AF, A.time_extinguished], dtype = 'int')
     
@@ -91,19 +87,19 @@ def OnePacemakerBeat(parameters, seeds, itr):
     np.save('onesr_data_'+str(itr),data_full)
 
 
-#OnePacemakerBeat(parameters=input_param, seeds=input_seeds, itr=job_number)
+OnePacemakerBeat(parameters=input_param, seeds=input_seeds, itr=job_number)
 
-parameters = []
-# nu, tau, p, whether the charge under threshold is conserved, amount to add to tau to get pace_rate 
-for m in [True, False]:
-    for j in np.array([50, 70, 90, 110, 130], dtype=int): # tau values
-        for n in [2,10,220-j]:
-            for i in np.linspace(0.05, 1, 20, endpoint = True): # nu values
-                for k in np.linspace(0, 0.95, 20, endpoint = True): # p values
-                    parameters.extend([[i,j,k,m,n]])
-            
-parameters = np.array(parameters).reshape((800,15,5))
-s = np.random.randint(0, 2**31, (800, 15, 2, 2),dtype='int')
+#parameters = []
+## nu, tau, p, whether the charge under threshold is conserved, amount to add to tau to get pace_rate 
+#for m in [True, False]:
+#    for j in np.array([50, 70, 90, 110, 130], dtype=int): # tau values
+#        for n in [2,10,220-j]:
+#            for i in np.linspace(0.35, 1, 20, endpoint = True): # nu values
+#                for k in np.linspace(0, 0.95, 20, endpoint = True): # p values
+#                    parameters.extend([[i,j,k,m,n]])
+#            
+#parameters = np.array(parameters).reshape((800,15,5))
+#s = np.random.randint(0, 2**31, (800, 15, 2, 2),dtype='int')
 
 #np.save('parameters', parameters)
 #np.save('seeds', s)
