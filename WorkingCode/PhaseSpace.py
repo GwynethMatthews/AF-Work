@@ -1,14 +1,15 @@
 
 import numpy as np
 import sys
+import math
 import Atrium_Final as AF
-#job_number = int(sys.argv[1])
-job_number = 280
+job_number = int(sys.argv[1])
+#job_number = 280
 
 input_param = np.load('parameters.npy')
 input_seeds = np.load('seeds.npy')
 
-print(np.shape(input_param))
+#print(np.shape(input_param))
 
 def OnePacemakerBeat(parameters, seeds, itr):
     data_full = []
@@ -75,7 +76,7 @@ def OnePacemakerBeat(parameters, seeds, itr):
             # A.t_AF = how long it was in AF for
             # A.time_extinguished = time wave is extinguished == tot_time if doesn't terminate
 
-            data = np.array([parameters[itr][l][0]*100, parameters[itr][l][1], parameters[itr][l][2]*100, 
+            data = np.array([np.ceil(parameters[itr][l][0]*1000), parameters[itr][l][1], np.ceil(parameters[itr][l][2]*100), 
                              parameters[itr][l][3], A.pace_rate, i, A.seed_connections, A.seed_prop,
                              A.fail_safe, A.AF, A.t_AF, A.time_extinguished], dtype = 'int')
     
@@ -87,19 +88,19 @@ def OnePacemakerBeat(parameters, seeds, itr):
     np.save('onesr_data_'+str(itr),data_full)
 
 
-OnePacemakerBeat(parameters=input_param, seeds=input_seeds, itr=job_number)
+#OnePacemakerBeat(parameters=input_param, seeds=input_seeds, itr=job_number)
 
-#parameters = []
-## nu, tau, p, whether the charge under threshold is conserved, amount to add to tau to get pace_rate 
-#for m in [True, False]:
-#    for j in np.array([50, 70, 90, 110, 130], dtype=int): # tau values
-#        for n in [2,10,220-j]:
-#            for i in np.linspace(0.35, 1, 20, endpoint = True): # nu values
-#                for k in np.linspace(0, 0.95, 20, endpoint = True): # p values
-#                    parameters.extend([[i,j,k,m,n]])
-#            
-#parameters = np.array(parameters).reshape((800,15,5))
-#s = np.random.randint(0, 2**31, (800, 15, 2, 2),dtype='int')
+parameters = []
+# nu, tau, p, whether the charge under threshold is conserved, amount to add to tau to get pace_rate 
+for m in [True, False]:
+    for j in np.array([50, 70, 90, 110, 130], dtype=int): # tau values
+        for n in [2,10,220-j]:
+            for i in np.linspace(0.35, 1, 27, endpoint = True): # nu values
+                for k in np.linspace(0, 0.95, 20, endpoint = True): # p values
+                    parameters.extend([[i,j,k,m,n]])
+            
+parameters = np.array(parameters).reshape((900,18,5))
+s = np.random.randint(0, 2**31, (900, 18, 2, 2),dtype='int')
 
-#np.save('parameters', parameters)
-#np.save('seeds', s)
+np.save('parameters', parameters)
+np.save('seeds', s)
