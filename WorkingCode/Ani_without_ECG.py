@@ -33,15 +33,15 @@ convolve = True
 grey_background = False
 resting_cells = False
 
-seed1 = 1485598097
-seed2 = 1709896889
-nu = 0.54
+seed1 = 1482929097
+seed2 = 1299299889
+nu = 0.6
 
-A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.15, pace_rate= 120,
-                       Lx=100,Ly=100, tot_time= 10000, nu_para=nu, nu_trans=nu, rp = 110,
+A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.5, pace_rate= 250,
+                       Lx=100,Ly=100, tot_time= 10000, nu_para=nu, nu_trans=nu, rp = 50,
                        seed_connections=seed1, seed_prop=seed2, boundary = True, 
                        pacemaker_line = True, radius = 3, charge_conservation = False,
-                       t_under = 1, t_under_on = False)
+                       t_under = 3, t_under_on = False)
 
 
 ###############################################################################
@@ -57,15 +57,15 @@ def update_hex(frame_number, collection, A, convolve):    # Frame number passed 
 #        A.ectopic_beat([4950,4951,5049,5050,5051,5150,5151])
     
     
-    if A.t < 10 * A.pace_rate:    ### Change multiplier to change number of paces
-        A.sinus_rhythm()
-        A.cmp_animation()    # Doesn't have a sinus rhythm
-        
-    else:
-        A.cmp_animation()
-        
-    if A.t >= int((10 * A.pace_rate) + (2.5 * A.Lx)):
-        print(A.t)
+    #if A.t < 10 * A.pace_rate:    ### Change multiplier to change number of paces
+    A.sinus_rhythm()
+    #    A.cmp_animation()    # Doesn't have a sinus rhythm
+#        
+    #else:
+    A.cmp_animation()
+#    print(A.index[np.where(A.excitation_rate == max(A.excitation_rate))])    
+#    if A.t >= int((10 * A.pace_rate) + (2.5 * A.Lx)):
+#        print(A.t)
     ### CHANGING P_NONFIRE (smaller p_nonfire makes it more likely to fire) ###
 #    if A.t in np.arange(1210, 1210 + 200*4, 200 ):
 #        A.p_nonfire -= 0.01
@@ -138,8 +138,8 @@ def update_hex(frame_number, collection, A, convolve):    # Frame number passed 
             collection.set_array(np.array(A.phases))
 
 
-    ax1.set_title('refractory period = %i, threshold = %0.2f, \nseed connection = %i, seed propagation = %i, pace_rate = %i \nnu = %0.3f, p not fire = %0.3f, t = %i' % (A.rp, A.threshold, A.seed_connections, A.seed_prop, A.pace_rate, A.nu_para, A.p_nonfire, A.t), fontsize=20)
-    ax1.title.set_position([0.5, 0.85])
+    #ax1.set_title('refractory period = %i, threshold = %0.2f, \nseed connection = %i, seed propagation = %i, pace_rate = %i \nnu = %0.3f, p not fire = %0.3f, t = %i' % (A.rp, A.threshold, A.seed_connections, A.seed_prop, A.pace_rate, A.nu_para, A.p_nonfire, A.t), fontsize=20)
+    #ax1.title.set_position([0.5, 0.85])
     
     if resting_cells == True:
         A.resting_cells = np.roll(A.resting_cells, -1)
@@ -242,7 +242,7 @@ if A.hexagonal:
 
     collection.set_clim(0, A.rp)
     collection.cmap.set_bad((169/600,169/600,169/600))
-#    collection.set_edgecolor('face')
+    collection.set_edgecolor('face')
 
     ax1.axis('equal')
     ax1.set_axis_off()
