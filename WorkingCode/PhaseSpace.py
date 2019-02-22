@@ -1,24 +1,30 @@
 
 import numpy as np
 import sys
+import math
 import Atrium_Final as AF
-#job_number = int(sys.argv[1])
+
+job_number = int(sys.argv[1])
+
 
 #input_param = np.load('parameters.npy')
 #input_seeds = np.load('seeds.npy')
 
+#print(np.shape(input_param))
+
 def OnePacemakerBeat(parameters, seeds, itr):
     data_full = []
     
-    #nu = 0.55
-
     for l in range(len(parameters[itr])):
         repeat_data = []
-	#print(l)
+        print(l)
+        
         for i in range(2):  ### Number of repeats   
+
             #print(parameters[itr][l])
             nu_para = parameters[itr][l][0]
             nu_trans = nu_para/parameters[itr][l][5] # either a third or a quarter of nu_para
+
             tau = int(parameters[itr][l][1])
             p = parameters[itr][l][2]
             t_under_on = parameters[itr][l][3]
@@ -36,16 +42,13 @@ def OnePacemakerBeat(parameters, seeds, itr):
             A.cmp_timestep()   ### With one sinus beat       
             
             while A.stop == False:
-                
                 if A.t < A.tot_time:
-                    
                     if A.t < 10 * pace:
                         A.cmp_timestep()
+
                         A.find_propagation_time()
                         if A.propagated == True:
                             AF_start = int((10 * pace) + (2 * A.propagation_time))
-                        
-                        
                     
                     else:
                         if len(A.states[0]) != 0:                        
@@ -62,9 +65,6 @@ def OnePacemakerBeat(parameters, seeds, itr):
                     A.fail_safe = True
                     A.time_extinguished = A.t
                     A.stop = True
-                    
-
-
                     
             #A.t_AF = int(A.time_extinguished - AF_start)
             
@@ -89,6 +89,7 @@ def OnePacemakerBeat(parameters, seeds, itr):
             data = np.array([parameters[itr][l][0]*100, parameters[itr][l][1], parameters[itr][l][2]*100, 
                              parameters[itr][l][3], A.pace_rate, parameters[itr][l][5], i, A.seed_connections, A.seed_prop,
                              A.fail_safe, A.AF, A.t_AF, A.time_extinguished, AF_start], dtype = 'int')
+
     
             repeat_data.extend([data])
 
@@ -105,16 +106,14 @@ parameters = []
 for m in [True, False]:
     for j in np.array([50, 70, 90, 110, 130], dtype=int): # tau values
         for n in [2,10,220-j]:
-            for i in np.linspace(0.35, 1, 3, endpoint = True): # nu values
-                for k in [0,0.5,1]: # p values
-            #for i in np.linspace(0.35, 1, 27, endpoint = True): # nu values
-                #for k in [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.6,0.7,0.8,0.9,1]: # p values
+            for i in np.linspace(0.35, 1, 27, endpoint = True): # nu values
+                for k in [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.6,0.7,0.8,0.9,1]: # p values
                     for l in [3,4]:
                         parameters.extend([[i,j,k,m,n,l]])
             
-#parameters = np.array(parameters).reshape((972,40,6))
-parameters = np.array(parameters).reshape((54,10,6))
+parameters = np.array(parameters).reshape((972,40,6))
 s = np.random.randint(0, 2**31, (972, 40, 2, 2),dtype='int')
-OnePacemakerBeat(parameters, s, 18)
+
 #np.save('parameters', parameters)
 #np.save('seeds', s)
+
