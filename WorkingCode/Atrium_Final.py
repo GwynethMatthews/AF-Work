@@ -345,6 +345,7 @@ class Atrium:
         new_rp = self.rp + increment
         self.states.extend([[]]*(new_rp-self.rp))
         self.phases[self.phases == self.rp] = new_rp
+        self.phases[self.resting] = new_rp
         self.rp = new_rp
 
     def resting_cells_over_time_collect(self):
@@ -357,25 +358,22 @@ class Atrium:
                 self.propagated = True
                 self.propagation_time = self.t
                 
-    def pacing_with_chage_of_rp(self, number_of_paces, time_between_pace_and_change_of_rp, increment):
+    def pacing_with_chage_of_rp(self, time_between_pace_and_change_of_rp, increment):
         """ time_between_pace_and_change_of_rp is the time between the pace and t_c where all cells excited at t > t_c
         will have the new rp (e.g. if = 0 then all cells that excite after a new pace will have the new refractory period)
         increment is the change in rp (if set to 0 then rp doesn't change, normal pacing)"""
         
-        if self.t < number_of_paces * self.pace_rate:
-            self.sinus_rhythm() # self.sinus_rhythm checks whether t % pace_rate == 0 
-            
-            if self.t == (self.time_increase_rp + time_between_pace_and_change_of_rp):
-
-                # changes the time for the next increase in rp
-                self.time_increase_rp += increment + self.pace_rate
-                self.change_rp(increment)  
-                
-            self.cmp_animation()    # Doesn't have a sinus rhythm
-            
+       # if self.t < number_of_paces * self.pace_rate:
+        self.sinus_rhythm() # self.sinus_rhythm checks whether t % pace_rate == 0 
         
-        else:
-            self.cmp_animation()
+        if self.t == (self.time_increase_rp + time_between_pace_and_change_of_rp):
+
+            # changes the time for the next increase in rp
+            self.time_increase_rp += increment + self.pace_rate
+            self.change_rp(increment)  
+            print(self.rp)
+        self.cmp_animation()    # Doesn't have a sinus rhythm
+            
 
 class DysfuncModel(Atrium):
     

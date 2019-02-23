@@ -32,14 +32,14 @@ from matplotlib import collections
 convolve = True
 grey_background = False
 resting_cells = False
-
+number_of_beats = 3
 
 seed1 = 1482929097
 seed2 = 1299299889
 nu = 0.6
 
-A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.01, pace_rate= 55,
-                       Lx=100,Ly=100, tot_time= 10000, nu_para=nu, nu_trans=nu, rp = 40,
+A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.01, pace_rate= 65,
+                       Lx=100,Ly=100, tot_time= 10000, nu_para=nu, nu_trans=nu, rp = 30,
                        seed_connections=seed1, seed_prop=seed2, boundary = True, 
                        pacemaker_line = True, radius = 3, charge_conservation = False,
                        t_under = 3, t_under_on = False)
@@ -54,10 +54,17 @@ A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.01, pace_rate= 5
 
 def update_hex(frame_number, collection, A, convolve):    # Frame number passed as default so needed
     """Next frame update for animation without ECG"""
-    
-    A.pacing_with_chage_of_rp(number_of_paces = 10, 
-                              time_between_pace_and_change_of_rp = 0, 
-                              increment = 10)
+    if A.t < number_of_beats * A.pace_rate:
+        A.pacing_with_chage_of_rp(time_between_pace_and_change_of_rp = 0, 
+                                 increment = 10)
+    ### Change rp at end of pacing ###
+#    elif A.t == (number_of_beats * A.pace_rate) + 2:
+#        A.change_rp(-10)
+#        A.cmp_animation()
+#        print(A.rp)
+#   
+#    else:
+#        A.cmp_animation()
 
 
     ### CHANGING P_NONFIRE (smaller p_nonfire makes it more likely to fire) ###
@@ -83,7 +90,8 @@ def update_hex(frame_number, collection, A, convolve):    # Frame number passed 
 #    ### Ectopic Beat ###
 #    if A.t % A.pace_rate == 0:
 #        A.ectopic_beat([4950,4951,5049,5050,5051,5150,5151])
-        
+#    A.cmp_animation()
+
     # WITH CONVOLUTION
     if convolve:
         if A.boundary == True:
@@ -222,11 +230,12 @@ if A.hexagonal:
                 
     for k in offsets:
         patches.extend([mpat.RegularPolygon(k, 6, radius=0.5/np.cos(np.pi/6))])
-        
+    
+#    pcm = ax.pcolormesh(x, y, Z, vmin=0, vmax=max(A.phases), cmap=plt.cm.jet_r)
     collection = collections.PatchCollection(patches, cmap= plt.cm.jet_r)
 
     ax1.add_collection(collection, autolim=True)
-
+    
     collection.set_clim(0, A.rp)
     collection.cmap.set_bad((169/600,169/600,169/600))
     collection.set_edgecolor('face')
