@@ -63,8 +63,8 @@ def update_hex(frame_number, collection, A, convolve):    # Frame number passed 
 #        A.cmp_animation()
 #        print(A.rp)
 #   
-#    else:
-#        A.cmp_animation()
+    else:
+        A.cmp_animation()
 
 
     ### CHANGING P_NONFIRE (smaller p_nonfire makes it more likely to fire) ###
