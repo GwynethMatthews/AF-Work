@@ -33,15 +33,15 @@ convolve = True
 grey_background = False
 resting_cells = False
 
-seed1 = 1686038309
-seed2 = 2003253072
-nu = 0.54
+seed1 = 12345666
+seed2 = 876543
+nu = 0.6
 
 
-A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.54, pace_rate= 120,
-                       Lx=100, Ly=100, tot_time= 10000, nu_para=nu, nu_trans=nu, rp = 110,
+A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.4, pace_rate=112,
+                       Lx=100, Ly=100, tot_time= 10000, nu_para=0.8, nu_trans=0.3, rp=110,
                        seed_connections=seed1, seed_prop=seed2, boundary = True, 
-                       charge_conservation = False, t_under = 1, t_under_on = True)
+                       t_under = 1, t_under_on = True)
 
 
 ###############################################################################
@@ -56,7 +56,7 @@ def update_hex(frame_number, collection, A, convolve):    # Frame number passed 
 #    if A.t % A.pace_rate == 0:
 #        A.ectopic_beat([4950,4951,5049,5050,5051,5150,5151])
     
-    if A.t < 10 * A.pace_rate:    ### Change multiplier to change number of paces
+    if A.t < 25 * A.pace_rate:    ### Change multiplier to change number of paces
         A.sinus_rhythm()
         A.cmp_animation()    # Doesn't have a sinus rhythm
         
