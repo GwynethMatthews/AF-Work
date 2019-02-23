@@ -55,7 +55,7 @@ A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.01, pace_rate= 6
 def update_hex(frame_number, collection, A, convolve):    # Frame number passed as default so needed
     """Next frame update for animation without ECG"""
     if A.t < number_of_beats * A.pace_rate:
-        A.pacing_with_chage_of_rp(time_between_pace_and_change_of_rp = 0, 
+        A.pacing_with_change_of_rp(time_between_pace_and_change_of_rp = 0, 
                                  increment = 10)
     ### Change rp at end of pacing ###
 #    elif A.t == (number_of_beats * A.pace_rate) + 2:

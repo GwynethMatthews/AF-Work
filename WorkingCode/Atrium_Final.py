@@ -358,7 +358,7 @@ class Atrium:
                 self.propagated = True
                 self.propagation_time = self.t
                 
-    def pacing_with_chage_of_rp(self, time_between_pace_and_change_of_rp, increment):
+    def pacing_with_change_of_rp(self, time_between_pace_and_change_of_rp, increment):
         """ time_between_pace_and_change_of_rp is the time between the pace and t_c where all cells excited at t > t_c
         will have the new rp (e.g. if = 0 then all cells that excite after a new pace will have the new refractory period)
         increment is the change in rp (if set to 0 then rp doesn't change, normal pacing)"""
