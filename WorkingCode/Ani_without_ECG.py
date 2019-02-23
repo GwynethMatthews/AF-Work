@@ -33,15 +33,17 @@ convolve = True
 grey_background = False
 resting_cells = False
 
-seed1 = 1686038309
-seed2 = 2003253072
-nu = 0.54
 
+seed1 = 1482929097
+seed2 = 1299299889
+nu = 0.6
 
-A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.54, pace_rate= 120,
-                       Lx=100, Ly=100, tot_time= 10000, nu_para=nu, nu_trans=nu, rp = 110,
+A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.01, pace_rate= 55,
+                       Lx=100,Ly=100, tot_time= 10000, nu_para=nu, nu_trans=nu, rp = 40,
                        seed_connections=seed1, seed_prop=seed2, boundary = True, 
-                       charge_conservation = False, t_under = 1, t_under_on = True)
+                       pacemaker_line = True, radius = 3, charge_conservation = False,
+                       t_under = 3, t_under_on = False)
+
 
 
 ###############################################################################
@@ -52,31 +54,16 @@ A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.54, pace_rate= 1
 
 def update_hex(frame_number, collection, A, convolve):    # Frame number passed as default so needed
     """Next frame update for animation without ECG"""
-
-#    if A.t % A.pace_rate == 0:
-#        A.ectopic_beat([4950,4951,5049,5050,5051,5150,5151])
     
-    if A.t < 10 * A.pace_rate:    ### Change multiplier to change number of paces
-        A.sinus_rhythm()
-        A.cmp_animation()    # Doesn't have a sinus rhythm
-        
-    else:
-        A.cmp_animation()
-        
-    if A.t >= int((10 * A.pace_rate) + (2.5 * A.Lx)):
-        print(A.t)
+    A.pacing_with_chage_of_rp(number_of_paces = 10, 
+                              time_between_pace_and_change_of_rp = 0, 
+                              increment = 10)
+
+
     ### CHANGING P_NONFIRE (smaller p_nonfire makes it more likely to fire) ###
 #    if A.t in np.arange(1210, 1210 + 200*4, 200 ):
 #        A.p_nonfire -= 0.01
-#    ### Note if p is decreasing can have errors when it reaches 0, fixed if set time for p_nonfire = 0 ###
-       
-#    if A.t == 1200:
-#        fig2 = plt.figure(2)
-#        ax3 = fig2.subplots(1, 1)
-#        x = np.bincount(A.excitation_rate)
-#        ax3.scatter(np.arange(len(x)), x, label = 't = 1200')
-#        ax3.plot([90,90], [0,2180]
-    
+#    ### Note if p is decreasing can have errors when it reaches 0, fixed if set time for p_nonfire = 0 ###    
 #        ### CHANGING REFRACTORY PERIOD ###
 #    if A.t == 10*A.pace_rate:
 #        A.change_rp(130)
@@ -93,8 +80,9 @@ def update_hex(frame_number, collection, A, convolve):    # Frame number passed 
 #    if A.t == 10900:
 #        A.p_nonfire = 0
     
-#    if len(A.states[0])== 0:
-#        print(A.t)
+#    ### Ectopic Beat ###
+#    if A.t % A.pace_rate == 0:
+#        A.ectopic_beat([4950,4951,5049,5050,5051,5150,5151])
         
     # WITH CONVOLUTION
     if convolve:
@@ -241,7 +229,7 @@ if A.hexagonal:
 
     collection.set_clim(0, A.rp)
     collection.cmap.set_bad((169/600,169/600,169/600))
-#    collection.set_edgecolor('face')
+    collection.set_edgecolor('face')
 
     ax1.axis('equal')
     ax1.set_axis_off()

@@ -1,38 +1,43 @@
-import Atrium as AC
+import Atrium_Final as AF
 import numpy as np
 import pickle
+
+import matplotlib.pyplot as plt
 """Defaults: L=200,v=0.5,d=0.05,e=0.05,rp=50,tot_time = 10**6
                  ,pace_rate = 220,seed1 = 1,seed2=2,seed3=3"""
-def RiskCurve(repeats,nus_trans,nus_para,seed1,seed2,seed3,seed4):
+def RiskCurve(repeats,nus,seeds):
     """Collects data for and plots the risk curve. Saves data."""
     AF_risks = []
     v_tAFs = []
-    nus_para = nus_para
-    nus = nus_trans 
-    for j in nus:
+    for j in range(len(nus)):
         print(j)
         v_tAF = []
+        #propagates = 0
         for i in range(repeats):
-            A = AC.Atrium(hexagonal = False, model = 1, v_para= 1,v_tran_1= j, pace_rate = 220,s1=seed1, s2=seed2, s3=seed3,s4 = seed4)
-            A.CMP2D()
-            v_tAF.extend([A.tot_AF/A.tot_time])
-            seed1 +=20
-            seed2 +=20
-            seed3 +=20
-            seed4 +=20
-        sample_avg = sum(v_tAF)/repeats
+            #print(i)
+            A = AF.SourceSinkModel(hexagonal=True, threshold=1,rp=50, nu_para=j,nu_trans=j, 
+                                   p_nonfire=0.05, pace_rate=220,seed_connections=seeds[j][i][0], seed_prop=seeds[j][i][1])
+            A.cmp_full()
+            
+            v_tAF.extend([A.t_AF/A.tot_time])
+            print(A.t_AF)
+            if A.AF == True:
+                print(A.AF)
+            #propagates += sum(A.number_of_excitations[A.last_col])
+
+        sample_avg = sum(v_tAF)
 
         v_tAFs.extend([v_tAF])
         AF_risks.extend([sample_avg])
     data = [nus,AF_risks,v_tAFs]
-    pickle.dump(data,open( "RiskCurveTrial.p", "wb" ) )
+    #data = np.array(data)
+    pickle.dump(data,open("RiskCurveTrialforPoster7.p","wb"))
     return data
 
-repeats = 2
-nus_trans = np.arange(0,0.4,0.05)
+repeats = 1
+nus_trans = np.linspace(0.33, 1, 68, endpoint = True)
 nus_para = 1
-seed1 = 1
-seed2 = 2
-seed3 = 3
-seed4 = 4  
-data = RiskCurve(repeats,nus_trans,nus_para,seed1,seed2,seed3,seed4)
+s = np.random.randint(0, 2**31, (80,1,2),dtype='int')
+data = RiskCurve(repeats,nus_trans,s)
+
+plt.scatter(data[0],data[1])

@@ -101,6 +101,9 @@ class Atrium:
         self.fail_safe = False
         self.time_extinguished = 0
         self.stop = False
+        self.propagated = False
+        self.propagation_time = 0
+        self.time_increase_rp = self.pace_rate + self.rp + 1
         
         self.states = [[]] * self.rp              # list of lists containing cells in each state except resting
 
@@ -265,15 +268,18 @@ class Atrium:
         self.number_of_excitations[excited_cells] += 1 
 
     def AF_checker(self, excited_cells):
-        
-        b = self.excitation_rate[excited_cells[self.number_of_excitations[excited_cells] > 1]]
+        # print('here')
+        #b = self.excitation_rate[excited_cells[self.number_of_excitations[excited_cells] > 1]]
+        b = self.excitation_rate[excited_cells]
         if len(b) > 0:
             a = np.mean(b)
 
 
             if a < self.pace_rate - 1: # and beat <= self.pace_rate * 1.5:
                 self.AF = True
+                #print(self.AF)
                 self.t_AF += 1
+                #print(self.t_AF)
                 ##print(self.AF)
                 #print(self.t)
     
@@ -323,7 +329,7 @@ class Atrium:
         self.cmp_no_sinus()
 
     def cmp_full(self):
-       #np.random.seed(self.seed_prop)   # Sets seed for all dysfunctional firings etc.
+        np.random.seed(self.seed_prop)   # Sets seed for all dysfunctional firings etc.
    
         while self.t < self.tot_time:
             self.cmp_timestep()
@@ -335,13 +341,41 @@ class Atrium:
         self.nu_para = new_nu_para
         self.create_neighbours()
     
-    def change_rp(self, new_rp):
+    def change_rp(self, increment):
+        new_rp = self.rp + increment
         self.states.extend([[]]*(new_rp-self.rp))
         self.phases[self.phases == self.rp] = new_rp
         self.rp = new_rp
 
     def resting_cells_over_time_collect(self):
         self.resting_cells_over_time.extend([len(self.resting[self.resting == True])])
+        
+    def find_propagation_time(self):
+        if self.propagated == False:
+            if sum(self.number_of_excitations[self.last_col]) > 0:
+                #print('here')
+                self.propagated = True
+                self.propagation_time = self.t
+                
+    def pacing_with_chage_of_rp(self, number_of_paces, time_between_pace_and_change_of_rp, increment):
+        """ time_between_pace_and_change_of_rp is the time between the pace and t_c where all cells excited at t > t_c
+        will have the new rp (e.g. if = 0 then all cells that excite after a new pace will have the new refractory period)
+        increment is the change in rp (if set to 0 then rp doesn't change, normal pacing)"""
+        
+        if self.t < number_of_paces * self.pace_rate:
+            self.sinus_rhythm() # self.sinus_rhythm checks whether t % pace_rate == 0 
+            
+            if self.t == (self.time_increase_rp + time_between_pace_and_change_of_rp):
+
+                # changes the time for the next increase in rp
+                self.time_increase_rp += increment + self.pace_rate
+                self.change_rp(increment)  
+                
+            self.cmp_animation()    # Doesn't have a sinus rhythm
+            
+        
+        else:
+            self.cmp_animation()
 
 class DysfuncModel(Atrium):
     
@@ -413,7 +447,7 @@ class DysfuncModel(Atrium):
 
 class SourceSinkModel(Atrium):
     
-    def __init__(self, threshold=0.75, hexagonal=False, Lx=100, Ly=100, rp=30, tot_time=10**6, nu_para=1, nu_trans=1,
+    def __init__(self, threshold=0.75, hexagonal=False, Lx=100, Ly=100, rp=30, tot_time=5*10**4, nu_para=1, nu_trans=1,
                  pace_rate=220, p_nonfire=0.75, seed_connections=1, seed_prop=4, boundary=True, pacemaker_line=True, radius=3, charge_conservation = False, t_under_on = False, t_under = 3):
 
         super(SourceSinkModel, self).__init__(hexagonal, Lx, Ly, rp, tot_time, nu_para, nu_trans, pace_rate, p_nonfire, seed_connections, seed_prop, boundary, pacemaker_line, radius, charge_conservation, t_under_on, t_under)       # Calls Atrium init function
@@ -462,7 +496,7 @@ class SourceSinkModel(Atrium):
 
         miss_threshold_fire_rand_nums = np.random.rand(len(possible_excited))
 
-        possible_excited = possible_excited[miss_threshold_fire_rand_nums > self.p_nonfire**(self.inward_current[possible_excited])]  # Fire if over p_nonfire
+        possible_excited = possible_excited[miss_threshold_fire_rand_nums > self.p_nonfire]  # Fire if over p_nonfire
         
         if self.t_under_on == True: 
             keep_current = possible_excited[miss_threshold_fire_rand_nums <= self.p_nonfire]
