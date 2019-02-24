@@ -30,16 +30,16 @@ from matplotlib import collections
 # Initiating the Atrium
 
 convolve = True
-grey_background = False
+grey_background = True
 resting_cells = False
-number_of_beats = 3
+number_of_beats = 36
 
 seed1 = 1482929097
 seed2 = 1299299889
-nu = 0.6
+nu = 0.5
 
-A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.01, pace_rate= 65,
-                       Lx=100,Ly=100, tot_time= 10000, nu_para=nu, nu_trans=nu, rp = 30,
+A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.01, pace_rate= 102,
+                       Lx=100,Ly=100, tot_time= 10000, nu_para=nu, nu_trans=nu, rp = 100,
                        seed_connections=seed1, seed_prop=seed2, boundary = True, 
                        pacemaker_line = True, radius = 3, charge_conservation = False,
                        t_under = 3, t_under_on = False)
@@ -55,8 +55,9 @@ A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.01, pace_rate= 6
 def update_hex(frame_number, collection, A, convolve):    # Frame number passed as default so needed
     """Next frame update for animation without ECG"""
     if A.t < number_of_beats * A.pace_rate:
-        A.pacing_with_change_of_rp(time_between_pace_and_change_of_rp = 0, 
-                                 increment = 10)
+        A.pacing_with_change_of_rp(time_between_pace_and_change_of_rp = 0,
+                                 increment = -2)
+
     ### Change rp at end of pacing ###
 #    elif A.t == (number_of_beats * A.pace_rate) + 2:
 #        A.change_rp(-10)
@@ -66,7 +67,7 @@ def update_hex(frame_number, collection, A, convolve):    # Frame number passed 
     else:
         A.cmp_animation()
 
-
+    print(len(A.states))
     ### CHANGING P_NONFIRE (smaller p_nonfire makes it more likely to fire) ###
 #    if A.t in np.arange(1210, 1210 + 200*4, 200 ):
 #        A.p_nonfire -= 0.01

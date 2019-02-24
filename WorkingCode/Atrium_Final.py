@@ -343,9 +343,18 @@ class Atrium:
     
     def change_rp(self, increment):
         new_rp = self.rp + increment
-        self.states.extend([[]]*(new_rp-self.rp))
-        self.phases[self.phases == self.rp] = new_rp
-        self.phases[self.resting] = new_rp
+        
+        if increment >= 0:
+            self.states.extend([[]]*(new_rp-self.rp))
+            self.phases[self.phases == self.rp] = new_rp
+            self.phases[self.resting] = new_rp
+            
+        elif increment < 0:
+            self.resting[np.concatenate(self.states[increment:])] = True
+            self.phases[np.concatenate(self.states[increment:])] = new_rp
+            self.phases[self.phases == self.rp] = new_rp
+            del self.states[increment:]
+            
         self.rp = new_rp
 
     def resting_cells_over_time_collect(self):
