@@ -296,7 +296,7 @@ class Atrium:
         if excited_cells.size > 0:      # Checks if non empty
             
             self.excitation_tracker(excited_cells)    # Tracks the excitation rates and last excitation of cells
-            self.AF_checker(excited_cells)          # Checks and updates the AF time
+            #self.AF_checker(excited_cells)          # Checks and updates the AF time
 
     def sinus_rhythm(self):
         return None   # Dummy that gets overriden by inheriting classes
@@ -366,6 +366,7 @@ class Atrium:
                 #print('here')
                 self.propagated = True
                 self.propagation_time = self.t
+                print(self.propagation_time)
                 
     def pacing_with_change_of_rp(self, time_between_pace_and_change_of_rp, increment):
         """ time_between_pace_and_change_of_rp is the time between the pace and t_c where all cells excited at t > t_c
