@@ -241,7 +241,7 @@ if A.hexagonal:
     
     collection.set_clim(0, A.rp)
     collection.cmap.set_bad((169/600,169/600,169/600))
-    collection.set_edgecolor('face')
+#    collection.set_edgecolor('face')
 
     ax1.axis('equal')
     ax1.set_axis_off()

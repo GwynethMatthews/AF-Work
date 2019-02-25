@@ -118,7 +118,7 @@ for m in [True, False]:
         for n in [2,10,220-j]:
             for i in np.linspace(0.35, 1, 27, endpoint = True): # nu values
             #for i in np.linspace(0.35, 1, 4, endpoint = True):
-                for k in [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.6,0.7,0.8,0.9,1]: # p values
+                for k in [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,0.1,0.15,0.16,0.17,0.18,0.19,0.2,0.25,0.3,0.35,0.4,0.45,0.5,0.6,0.7,0.8,0.9,1]: # p values
                 #for k in [0,0.5,0.9]:
                     for l in [3,4]:
                         parameters.extend([[i,j,k,m,n,l]])
