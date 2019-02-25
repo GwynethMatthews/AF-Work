@@ -32,17 +32,17 @@ from matplotlib import collections
 convolve = True
 grey_background = True
 resting_cells = False
-number_of_beats = 36
+number_of_beats = 31
 
 seed1 = 981119064
 seed2 = 1332298101
-nu = 0.67
+nu = 0.6
 
-A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.5, pace_rate= 120,
-                       Lx=100,Ly=100, tot_time= 10000, nu_para=nu, nu_trans=nu/3., rp = 110,
+A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.2, pace_rate= 62,
+                       Lx=100,Ly=100, tot_time= 10000, nu_para=nu, nu_trans=nu, rp = 60,
                        seed_connections=seed1, seed_prop=seed2, boundary = True, 
                        pacemaker_line = True, radius = 3, charge_conservation = False,
-                       t_under = 1, t_under_on = True)
+                       t_under = 1, t_under_on = False)
 
 
 
@@ -54,9 +54,9 @@ A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.5, pace_rate= 12
 
 def update_hex(frame_number, collection, A, convolve):    # Frame number passed as default so needed
     """Next frame update for animation without ECG"""
-#    if A.t < number_of_beats * A.pace_rate:
-#        A.pacing_with_change_of_rp(time_between_pace_and_change_of_rp = 0,
-#                                 increment = -2)
+    if A.t < number_of_beats * A.pace_rate:
+        A.pacing_with_change_of_rp(time_between_pace_and_change_of_rp = 0,
+                                 increment = -1)
 
     ### Change rp at end of pacing ###
 #    elif A.t == (number_of_beats * A.pace_rate) + 2:
@@ -64,9 +64,9 @@ def update_hex(frame_number, collection, A, convolve):    # Frame number passed 
 #        A.cmp_animation()
 #        print(A.rp)
 #   
-#    else:
-    A.sinus_rhythm()
-    A.cmp_animation()
+    else:
+#    A.sinus_rhythm()
+        A.cmp_animation()
     A.find_propagation_time()
 
     #print(len(A.states))

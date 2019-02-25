@@ -103,7 +103,7 @@ class Atrium:
         self.stop = False
         self.propagated = False
         self.propagation_time = 0
-        self.time_increase_rp = self.pace_rate + self.rp + 1
+        self.time_increase_rp = self.pace_rate + self.rp
         
         self.states = [[]] * self.rp              # list of lists containing cells in each state except resting
 
@@ -350,10 +350,18 @@ class Atrium:
             self.phases[self.resting] = new_rp
             
         elif increment < 0:
+            #print(self.states[-2])
+            #print(self.phases[np.concatenate(self.states[-2:])])
+            #print(self.phases[self.resting])
             self.resting[np.concatenate(self.states[increment:])] = True
             self.phases[np.concatenate(self.states[increment:])] = new_rp
             self.phases[self.phases == self.rp] = new_rp
             del self.states[increment:]
+            #print(self.states[-1])
+            #print(len(self.states))
+            
+            #print(self.phases[self.states[-1]])
+            #print(self.phases[self.resting])
             
         self.rp = new_rp
 
@@ -366,23 +374,24 @@ class Atrium:
                 #print('here')
                 self.propagated = True
                 self.propagation_time = self.t
-                print(self.propagation_time)
+                #print(self.propagation_time)
                 
     def pacing_with_change_of_rp(self, time_between_pace_and_change_of_rp, increment):
         """ time_between_pace_and_change_of_rp is the time between the pace and t_c where all cells excited at t > t_c
         will have the new rp (e.g. if = 0 then all cells that excite after a new pace will have the new refractory period)
         increment is the change in rp (if set to 0 then rp doesn't change, normal pacing)"""
-        
-       # if self.t < number_of_paces * self.pace_rate:
+
         self.sinus_rhythm() # self.sinus_rhythm checks whether t % pace_rate == 0 
         
+        
         if self.t == (self.time_increase_rp + time_between_pace_and_change_of_rp):
-
+            
             # changes the time for the next increase in rp
             self.time_increase_rp += increment + self.pace_rate
             self.change_rp(increment)  
-            print(self.rp)
+
         self.cmp_animation()    # Doesn't have a sinus rhythm
+        #self.cmp_no_sinus()
             
 
 class DysfuncModel(Atrium):
