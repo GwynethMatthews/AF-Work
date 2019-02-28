@@ -39,7 +39,7 @@ seed2 = 1299299889
 nu = 0.6
 
 
-A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.4, pace_rate=112,
+A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.3, pace_rate=112,
                        Lx=100, Ly=100, tot_time= 10000, nu_para=0.8, nu_trans=0.3, rp=110,
                        seed_connections=seed1, seed_prop=seed2, boundary = True, 
                        t_under = 1, t_under_on = True)
@@ -54,9 +54,9 @@ def update_hex(frame_number, collection, A, convolve):    # Frame number passed 
     """Next frame update for animation without ECG"""
     
 
-    A.pacing_with_chage_of_rp(number_of_paces = 10, 
-                              time_between_pace_and_change_of_rp = 0, 
-                              increment = 10)
+    A.pacing_with_chage_of_rp(number_of_paces = 3, 
+                              time_between_pace_and_change_of_rp = 10, 
+                              increment = -10)
 
     ### CHANGING P_NONFIRE (smaller p_nonfire makes it more likely to fire) ###
 #    if A.t in np.arange(1210, 1210 + 200*4, 200 ):
