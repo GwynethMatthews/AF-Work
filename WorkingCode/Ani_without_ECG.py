@@ -28,16 +28,20 @@ from matplotlib import collections
 
 ###############################################################################
 # Initiating the Atrium
-
+#data = []
 convolve = True
-grey_background = False
+grey_background = True
 resting_cells = False
 
+number_of_beats = 31
 
-seed1 = 1482929097
-seed2 = 1299299889
-nu = 0.6
-
+seed1 = 1788981512
+seed2 = 999467520
+nu = 0.62
+p = 0.15
+tot_time = 15000
+rp = 100
+pace_rate = 102
 
 A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.3, pace_rate=112,
                        Lx=100, Ly=100, tot_time= 10000, nu_para=0.8, nu_trans=0.3, rp=110,
@@ -52,12 +56,23 @@ A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.3, pace_rate=112
 
 def update_hex(frame_number, collection, A, convolve):    # Frame number passed as default so needed
     """Next frame update for animation without ECG"""
-    
 
-    A.pacing_with_chage_of_rp(number_of_paces = 3, 
-                              time_between_pace_and_change_of_rp = 10, 
-                              increment = -10)
 
+    if A.t < number_of_beats * A.pace_rate:
+        A.pacing_with_change_of_rp(time_between_pace_and_change_of_rp = 0,
+                                 increment = -1)
+
+    ### Change rp at end of pacing ###
+#    elif A.t == (number_of_beats * A.pace_rate) + 2:
+#        A.change_rp(-10)
+#        A.cmp_animation()
+#        print(A.rp)
+#   
+    else:
+        A.cmp_animation()
+#    A.find_propagation_time()
+
+    #print(len(A.states))
     ### CHANGING P_NONFIRE (smaller p_nonfire makes it more likely to fire) ###
 #    if A.t in np.arange(1210, 1210 + 200*4, 200 ):
 #        A.p_nonfire -= 0.01
@@ -81,8 +96,12 @@ def update_hex(frame_number, collection, A, convolve):    # Frame number passed 
 #    ### Ectopic Beat ###
 #    if A.t % A.pace_rate == 0:
 #        A.ectopic_beat([4950,4951,5049,5050,5051,5150,5151])
-        
+#    A.cmp_animation()
+#    global data
+#    data.extend([A.excitation_rate])
+    #print('her')
     # WITH CONVOLUTION
+    
     if convolve:
         if A.boundary == True:
             mode = ('wrap', 'nearest')
@@ -123,7 +142,7 @@ def update_hex(frame_number, collection, A, convolve):    # Frame number passed 
             collection.set_array(np.array(A.phases))
 
 
-    ax1.set_title('refractory period = %i, threshold = %0.2f, \nseed connection = %i, seed propagation = %i, pace_rate = %i \nnu = %0.3f, p not fire = %0.3f, t = %i' % (A.rp, A.threshold, A.seed_connections, A.seed_prop, A.pace_rate, A.nu_para, A.p_nonfire, A.t), fontsize=20)
+    ax1.set_title('refractory period = %i, threshold = %0.2f, \nseed connection = %i, seed propagation = %i, pace_rate = %i \nnu = %0.3f, p not fire = %0.3f,\nt = %i' % (A.rp, A.threshold, A.seed_connections, A.seed_prop, A.pace_rate, A.nu_para, A.p_nonfire, A.t), fontsize=20)
     ax1.title.set_position([0.5, 0.85])
     
     if resting_cells == True:
@@ -220,14 +239,15 @@ if A.hexagonal:
                 
     for k in offsets:
         patches.extend([mpat.RegularPolygon(k, 6, radius=0.5/np.cos(np.pi/6))])
-        
+    
+#    pcm = ax.pcolormesh(x, y, Z, vmin=0, vmax=max(A.phases), cmap=plt.cm.jet_r)
     collection = collections.PatchCollection(patches, cmap= plt.cm.jet_r)
 
     ax1.add_collection(collection, autolim=True)
-
+    
     collection.set_clim(0, A.rp)
     collection.cmap.set_bad((169/600,169/600,169/600))
-    collection.set_edgecolor('face')
+#    collection.set_edgecolor('face')
 
     ax1.axis('equal')
     ax1.set_axis_off()

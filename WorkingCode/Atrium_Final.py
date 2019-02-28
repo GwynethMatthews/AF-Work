@@ -103,7 +103,7 @@ class Atrium:
         self.stop = False
         self.propagated = False
         self.propagation_time = 0
-        self.time_increase_rp = self.pace_rate + self.rp + 1
+        self.time_increase_rp = self.pace_rate + self.rp
         
         self.states = [[]] * self.rp              # list of lists containing cells in each state except resting
 
@@ -296,7 +296,7 @@ class Atrium:
         if excited_cells.size > 0:      # Checks if non empty
             
             self.excitation_tracker(excited_cells)    # Tracks the excitation rates and last excitation of cells
-            self.AF_checker(excited_cells)          # Checks and updates the AF time
+            #self.AF_checker(excited_cells)          # Checks and updates the AF time
 
     def sinus_rhythm(self):
         return None   # Dummy that gets overriden by inheriting classes
@@ -343,8 +343,21 @@ class Atrium:
     
     def change_rp(self, increment):
         new_rp = self.rp + increment
-        self.states.extend([[]]*(new_rp-self.rp))
-        self.phases[self.phases == self.rp] = new_rp
+        
+        if increment >= 0:
+            self.states.extend([[]]*(new_rp-self.rp))
+            
+            self.phases[self.phases == self.rp] = new_rp
+            self.phases[self.resting] = new_rp
+            
+        elif increment < 0:
+            self.resting[np.concatenate(self.states[increment:])] = True
+            
+            self.phases[np.concatenate(self.states[increment:])] = new_rp
+            self.phases[self.phases == self.rp] = new_rp
+            
+            del self.states[increment:]
+            
         self.rp = new_rp
 
     def resting_cells_over_time_collect(self):
@@ -353,29 +366,26 @@ class Atrium:
     def find_propagation_time(self):
         if self.propagated == False:
             if sum(self.number_of_excitations[self.last_col]) > 0:
-                #print('here')
                 self.propagated = True
                 self.propagation_time = self.t
                 
-    def pacing_with_chage_of_rp(self, number_of_paces, time_between_pace_and_change_of_rp, increment):
+    def pacing_with_change_of_rp(self, time_between_pace_and_change_of_rp, increment):
         """ time_between_pace_and_change_of_rp is the time between the pace and t_c where all cells excited at t > t_c
         will have the new rp (e.g. if = 0 then all cells that excite after a new pace will have the new refractory period)
         increment is the change in rp (if set to 0 then rp doesn't change, normal pacing)"""
-        
-        if self.t < number_of_paces * self.pace_rate:
-            self.sinus_rhythm() # self.sinus_rhythm checks whether t % pace_rate == 0 
-            
-            if self.t == (self.time_increase_rp + time_between_pace_and_change_of_rp):
 
-                # changes the time for the next increase in rp
-                self.time_increase_rp += increment + self.pace_rate
-                self.change_rp(increment)  
-                
-            self.cmp_animation()    # Doesn't have a sinus rhythm
-            
+        self.sinus_rhythm() # self.sinus_rhythm checks whether t % pace_rate == 0 
         
-        else:
-            self.cmp_animation()
+        
+        if self.t == (self.time_increase_rp + time_between_pace_and_change_of_rp):
+            
+            # changes the time for the next increase in rp
+            self.time_increase_rp += increment + self.pace_rate
+            self.change_rp(increment)  
+
+        self.cmp_animation()    # Doesn't have a sinus rhythm
+        #self.cmp_no_sinus()
+            
 
 class DysfuncModel(Atrium):
     
