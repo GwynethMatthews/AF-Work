@@ -19,7 +19,7 @@ def OnePacemakerBeat(parameters, seeds, itr):
         repeat_data = []
         print(l)
         
-        for i in range(100):  ### Number of repeats   
+        for i in range(2):  ### Number of repeats   
 
             #print(parameters[itr][l])
             nu = parameters[itr][l][0]
@@ -119,7 +119,7 @@ def OnePacemakerBeat(parameters, seeds, itr):
             
             data = np.array([parameters[itr][l][0]*100, parameters[itr][l][1], parameters[itr][l][2]*100, 
                              i, A.seed_connections, A.seed_prop,
-                             A.fail_safe, A.AF, A.t_AF, A.time_extinguished, AF_start, avg_resting, std_resting, med_resting, min_resting, max_resting])
+                             A.fail_safe, A.AF, A.t_AF, A.time_extinguished, AF_start, avg_resting, std_resting, med_resting, min_resting, max_resting],dtype = int)
     
 
     
@@ -145,8 +145,8 @@ for j in np.arange(50, 102, 2): # tau values
             
 parameters = np.array(parameters).reshape((832,10,3))
 #parameters = np.array(parameters).reshape((72,10,6))
-s = np.random.randint(0, 2**31, (832, 10, 100, 2),dtype='int')
-#OnePacemakerBeat(parameters, s, 27)
+s = np.random.randint(0, 2**31, (832, 10, 2, 2),dtype='int')
+OnePacemakerBeat(parameters, s, 27)
 #np.save('parameters', parameters)
 #np.save('seeds', s)
 

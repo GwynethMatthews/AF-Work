@@ -346,22 +346,17 @@ class Atrium:
         
         if increment >= 0:
             self.states.extend([[]]*(new_rp-self.rp))
+            
             self.phases[self.phases == self.rp] = new_rp
             self.phases[self.resting] = new_rp
             
         elif increment < 0:
-            #print(self.states[-2])
-            #print(self.phases[np.concatenate(self.states[-2:])])
-            #print(self.phases[self.resting])
             self.resting[np.concatenate(self.states[increment:])] = True
+            
             self.phases[np.concatenate(self.states[increment:])] = new_rp
             self.phases[self.phases == self.rp] = new_rp
-            del self.states[increment:]
-            #print(self.states[-1])
-            #print(len(self.states))
             
-            #print(self.phases[self.states[-1]])
-            #print(self.phases[self.resting])
+            del self.states[increment:]
             
         self.rp = new_rp
 
@@ -371,10 +366,8 @@ class Atrium:
     def find_propagation_time(self):
         if self.propagated == False:
             if sum(self.number_of_excitations[self.last_col]) > 0:
-                #print('here')
                 self.propagated = True
                 self.propagation_time = self.t
-                #print(self.propagation_time)
                 
     def pacing_with_change_of_rp(self, time_between_pace_and_change_of_rp, increment):
         """ time_between_pace_and_change_of_rp is the time between the pace and t_c where all cells excited at t > t_c

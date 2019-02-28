@@ -28,18 +28,21 @@ from matplotlib import collections
 
 ###############################################################################
 # Initiating the Atrium
-
+#data = []
 convolve = True
 grey_background = True
 resting_cells = False
 number_of_beats = 31
 
-seed1 = 981119064
-seed2 = 1332298101
-nu = 0.6
-
-A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.2, pace_rate= 62,
-                       Lx=100,Ly=100, tot_time= 10000, nu_para=nu, nu_trans=nu, rp = 60,
+seed1 = 1788981512
+seed2 = 999467520
+nu = 0.62
+p = 0.15
+tot_time = 15000
+rp = 100
+pace_rate = 102
+A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=p, pace_rate= pace_rate,
+                       Lx=70,Ly=100, tot_time= tot_time, nu_para=nu, nu_trans=nu, rp = rp,
                        seed_connections=seed1, seed_prop=seed2, boundary = True, 
                        pacemaker_line = True, radius = 3, charge_conservation = False,
                        t_under = 1, t_under_on = False)
@@ -67,7 +70,7 @@ def update_hex(frame_number, collection, A, convolve):    # Frame number passed 
     else:
 #    A.sinus_rhythm()
         A.cmp_animation()
-    A.find_propagation_time()
+#    A.find_propagation_time()
 
     #print(len(A.states))
     ### CHANGING P_NONFIRE (smaller p_nonfire makes it more likely to fire) ###
@@ -94,7 +97,9 @@ def update_hex(frame_number, collection, A, convolve):    # Frame number passed 
 #    if A.t % A.pace_rate == 0:
 #        A.ectopic_beat([4950,4951,5049,5050,5051,5150,5151])
 #    A.cmp_animation()
-
+#    global data
+#    data.extend([A.excitation_rate])
+    #print('her')
     # WITH CONVOLUTION
     if convolve:
         if A.boundary == True:
@@ -136,7 +141,7 @@ def update_hex(frame_number, collection, A, convolve):    # Frame number passed 
             collection.set_array(np.array(A.phases))
 
 
-    ax1.set_title('refractory period = %i, threshold = %0.2f, \nseed connection = %i, seed propagation = %i, pace_rate = %i \nnu = %0.3f, p not fire = %0.3f, t = %i' % (A.rp, A.threshold, A.seed_connections, A.seed_prop, A.pace_rate, A.nu_para, A.p_nonfire, A.t), fontsize=20)
+    ax1.set_title('refractory period = %i, threshold = %0.2f, \nseed connection = %i, seed propagation = %i, pace_rate = %i \nnu = %0.3f, p not fire = %0.3f,\nt = %i' % (A.rp, A.threshold, A.seed_connections, A.seed_prop, A.pace_rate, A.nu_para, A.p_nonfire, A.t), fontsize=20)
     ax1.title.set_position([0.5, 0.85])
     
     if resting_cells == True:
