@@ -35,18 +35,18 @@ resting_cells = False
 
 number_of_beats = 31
 
-seed1 = 1788981512
-seed2 = 999467520
-nu = 0.62
-p = 0.15
-tot_time = 15000
-rp = 100
-pace_rate = 102
+seed1 = 2094962020
+seed2 = 210071955
+nu = 0.64
+p = 0.06
+tot_time = 300000
+rp = 70
+pace_rate = 72
 
-A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.3, pace_rate=112,
-                       Lx=100, Ly=100, tot_time= 10000, nu_para=0.8, nu_trans=0.3, rp=110,
+A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=p, pace_rate=rp + 2,
+                       Lx=70, Ly=100, tot_time= tot_time, nu_para=nu, nu_trans=nu, rp=rp,
                        seed_connections=seed1, seed_prop=seed2, boundary = True, 
-                       t_under = 1, t_under_on = True)
+                       t_under = 1, t_under_on = False)
 
 ###############################################################################
 # Animation function
@@ -57,9 +57,8 @@ A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=0.3, pace_rate=112
 def update_hex(frame_number, collection, A, convolve):    # Frame number passed as default so needed
     """Next frame update for animation without ECG"""
 
-
     if A.t < number_of_beats * A.pace_rate:
-        A.pacing_with_change_of_rp(time_between_pace_and_change_of_rp = 0,
+        A.pacing_with_change_of_rp_ani(time_between_pace_and_change_of_rp = 0,
                                  increment = -1)
 
     ### Change rp at end of pacing ###
@@ -69,6 +68,9 @@ def update_hex(frame_number, collection, A, convolve):    # Frame number passed 
 #        print(A.rp)
 #   
     else:
+        if A.t + 1 % 1000 == 0:
+            A.p_nonfire -= 0.002
+        
         A.cmp_animation()
 #    A.find_propagation_time()
 
@@ -207,7 +209,7 @@ if not A.hexagonal:
 if A.hexagonal:
     np.random.seed(A.seed_prop)
 
-    fig1 = plt.figure(figsize = [15,15])
+    fig1 = plt.figure(figsize = [7,7])
     
     if resting_cells == False:
         ax1 = fig1.subplots(1,1)
