@@ -32,22 +32,21 @@ from matplotlib import collections
 convolve = True
 grey_background = True
 resting_cells = False
+
 number_of_beats = 31
 
-seed1 = 1788981512
-seed2 = 999467520
-nu = 0.62
-p = 0.15
-tot_time = 15000
-rp = 100
-pace_rate = 102
-A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=p, pace_rate= pace_rate,
-                       Lx=70,Ly=100, tot_time= tot_time, nu_para=nu, nu_trans=nu, rp = rp,
+nu = 0.66
+tau = 76
+p = 0.07
+seed1 = 53517399
+seed2 = 543500048
+
+A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=p, pace_rate=tau + 2,
+                       Lx=70, Ly=100, tot_time= 50000, nu_para=nu, nu_trans=nu, rp=tau,
                        seed_connections=seed1, seed_prop=seed2, boundary = True, 
-                       pacemaker_line = True, radius = 3, charge_conservation = False,
                        t_under = 1, t_under_on = False)
 
-
+np.random.seed(A.seed_prop)
 
 ###############################################################################
 # Animation function
@@ -57,8 +56,9 @@ A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=p, pace_rate= pace
 
 def update_hex(frame_number, collection, A, convolve):    # Frame number passed as default so needed
     """Next frame update for animation without ECG"""
+
     if A.t < number_of_beats * A.pace_rate:
-        A.pacing_with_change_of_rp(time_between_pace_and_change_of_rp = 0,
+        A.pacing_with_change_of_rp_ani(time_between_pace_and_change_of_rp = 0,
                                  increment = -1)
 
     ### Change rp at end of pacing ###
@@ -68,7 +68,9 @@ def update_hex(frame_number, collection, A, convolve):    # Frame number passed 
 #        print(A.rp)
 #   
     else:
-#    A.sinus_rhythm()
+#        if A.t + 1 % 1000 == 0:
+#            A.p_nonfire -= 0.002
+        
         A.cmp_animation()
 #    A.find_propagation_time()
 
@@ -101,6 +103,7 @@ def update_hex(frame_number, collection, A, convolve):    # Frame number passed 
 #    data.extend([A.excitation_rate])
     #print('her')
     # WITH CONVOLUTION
+    
     if convolve:
         if A.boundary == True:
             mode = ('wrap', 'nearest')
@@ -206,7 +209,7 @@ if not A.hexagonal:
 if A.hexagonal:
     np.random.seed(A.seed_prop)
 
-    fig1 = plt.figure(figsize = [15,15])
+    fig1 = plt.figure(figsize = [7,7])
     
     if resting_cells == False:
         ax1 = fig1.subplots(1,1)

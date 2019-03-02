@@ -11,8 +11,10 @@ results5 = np.load('Averages_tau_130_charge_storage_on_pr_140.npy')
 # probability of entering AF,
 # average time in AF (includes values for when AF in not entered i.e. t_AF = 0),
 # average time of terminationg for repeats that terminate after entering AF
-nu = np.linspace(0.325, 1, 28, endpoint = True)
-p = np.array([0,0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1,0.15,0.2,0.25,0.30,0.4,0.5,0.6,0.7,0.8,1])
+
+nu = np.linspace(0.4, 0.7, 16, endpoint = True)
+p = np.array([0,0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1,0.11,0.12,0.13,0.14,0.15,0.17,0.2,0.25,0.3])
+tau = np.arange(50, 102, 2)
 
 AF_probs1 = []
 AF_probs2 = []
@@ -21,33 +23,47 @@ AF_probs4 = []
 AF_probs5 = []
 
 for i in results1:
-    a = i[8]-((10*i[4])+250)
+    a = i[8]-((10 * i[4]) + 250)
     #print(i[8])
     #print(i[4])
     #print(a)
     if a < 0:
         a = 0
+        
     AF_probs1.extend([a]) 
+    
 for i in results2:
     a = i[8]-((10*i[4])+250)
+    
     if a < 0:
         a = 0
+        
     AF_probs2.extend([a]) 
+    
 for i in results3:
     a = i[8]-((10*i[4])+250)
+    
     if a < 0:
         a = 0
+        
     AF_probs3.extend([a])   
+    
 for i in results4:
     a = i[8]-((10*i[4])+250)
+    
     if a < 0:
         a = 0
+
     AF_probs4.extend([a]) 
+
 for i in results5:
     a = i[8]-((10*i[4])+250)
+
     if a < 0:
         a = 0
+
     AF_probs5.extend([a]) 
+
 print(min(AF_probs1))
 print(min(AF_probs2))
 print(min(AF_probs3))

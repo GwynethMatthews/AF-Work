@@ -376,9 +376,22 @@ class Atrium:
 
         self.sinus_rhythm() # self.sinus_rhythm checks whether t % pace_rate == 0 
         
+        if self.t == (self.time_increase_rp + time_between_pace_and_change_of_rp):
+            # changes the time for the next increase in rp
+            self.time_increase_rp += increment + self.pace_rate
+            self.change_rp(increment)  
+
+#        self.cmp_animation()    # Doesn't have a sinus rhythm
+        self.cmp_no_sinus()
+        
+    def pacing_with_change_of_rp_ani(self, time_between_pace_and_change_of_rp, increment):
+#         """ time_between_pace_and_change_of_rp is the time between the pace and t_c where all cells excited at t > t_c
+#        will have the new rp (e.g. if = 0 then all cells that excite after a new pace will have the new refractory period)
+#        increment is the change in rp (if set to 0 then rp doesn't change, normal pacing)"""
+        
+        self.sinus_rhythm() # self.sinus_rhythm checks whether t % pace_rate == 0 
         
         if self.t == (self.time_increase_rp + time_between_pace_and_change_of_rp):
-            
             # changes the time for the next increase in rp
             self.time_increase_rp += increment + self.pace_rate
             self.change_rp(increment)  
@@ -457,7 +470,7 @@ class DysfuncModel(Atrium):
 
 class SourceSinkModel(Atrium):
     
-    def __init__(self, threshold=0.75, hexagonal=False, Lx=100, Ly=100, rp=30, tot_time=5*10**4, nu_para=1, nu_trans=1,
+    def __init__(self, threshold=1, hexagonal=True, Lx=70, Ly=100, rp=70, tot_time=5*10**4, nu_para=1, nu_trans=1,
                  pace_rate=220, p_nonfire=0.75, seed_connections=1, seed_prop=4, boundary=True, pacemaker_line=True, radius=3, charge_conservation = False, t_under_on = False, t_under = 3):
 
         super(SourceSinkModel, self).__init__(hexagonal, Lx, Ly, rp, tot_time, nu_para, nu_trans, pace_rate, p_nonfire, seed_connections, seed_prop, boundary, pacemaker_line, radius, charge_conservation, t_under_on, t_under)       # Calls Atrium init function
