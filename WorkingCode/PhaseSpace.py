@@ -50,10 +50,7 @@ def OnePacemakerBeat(parameters, seeds, itr):
             A.cmp_timestep()   ### With one sinus beat       
             
             while A.stop == False:
-                if A.t < A.tot_time:
-                    
-                    if A.t == 31 * A.pace_rate: # fraction of resting cells at the last beat
-                        resting_cells_at_last_beat = len(A.resting_cells[A.resting_cells == True])/(A.Lx*A.Ly)
+                if A.t < A.tot_time: 
                     
                     if A.t < 31 * A.pace_rate:
                         # pacing
@@ -66,6 +63,9 @@ def OnePacemakerBeat(parameters, seeds, itr):
                             AF_start = int((31 * pace) + (5 * A.propagation_time))
                     
                     else:
+                        if A.t == 31 * A.pace_rate: # fraction of resting cells at the last beat
+                            resting_cells_at_last_beat = float(len(A.resting[A.resting == True])) / (A.Lx*A.Ly)
+                        
                         if len(A.states[0]) != 0:   # continues to propagate
                             
                             A.cmp_no_sinus()
