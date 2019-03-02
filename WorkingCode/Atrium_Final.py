@@ -369,27 +369,20 @@ class Atrium:
                 self.propagated = True
                 self.propagation_time = self.t
                 
-    def pacing_with_change_of_rp_then_no_sinus(self, time_between_pace_and_change_of_rp, increment, num_paces):
+    def pacing_with_change_of_rp(self, time_between_pace_and_change_of_rp, increment):
         """ time_between_pace_and_change_of_rp is the time between the pace and t_c where all cells excited at t > t_c
         will have the new rp (e.g. if = 0 then all cells that excite after a new pace will have the new refractory period)
         increment is the change in rp (if set to 0 then rp doesn't change, normal pacing)"""
 
-        np.random.seed(self.seed_prop)   # Sets seed for all dysfunctional firings etc.
+        self.sinus_rhythm() # self.sinus_rhythm checks whether t % pace_rate == 0 
+        
+        if self.t == (self.time_increase_rp + time_between_pace_and_change_of_rp):
+            # changes the time for the next increase in rp
+            self.time_increase_rp += increment + self.pace_rate
+            self.change_rp(increment)  
 
-        while self.t < (num_paces * self.pace_rate):
-            self.sinus_rhythm() # self.sinus_rhythm checks whether t % pace_rate == 0 
-            
-            if self.t == (self.time_increase_rp + time_between_pace_and_change_of_rp):
-                # changes the time for the next increase in rp
-                self.time_increase_rp += increment + self.pace_rate
-                self.change_rp(increment)  
-                
-            self.cmp_no_sinus()
-            
-        while self.t < self.tot_time:
-            self.cmp_no_sinus()
-            
-        self.tot_AF += self.t_AF
+#        self.cmp_animation()    # Doesn't have a sinus rhythm
+        self.cmp_no_sinus()
         
     def pacing_with_change_of_rp_ani(self, time_between_pace_and_change_of_rp, increment):
 #         """ time_between_pace_and_change_of_rp is the time between the pace and t_c where all cells excited at t > t_c

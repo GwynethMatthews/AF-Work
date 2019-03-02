@@ -35,18 +35,18 @@ resting_cells = False
 
 number_of_beats = 31
 
-seed1 = 2094962020
-seed2 = 210071955
-nu = 0.64
-p = 0.06
-tot_time = 300000
-rp = 70
-pace_rate = 72
+nu = 0.66
+tau = 76
+p = 0.07
+seed1 = 53517399
+seed2 = 543500048
 
-A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=p, pace_rate=rp + 2,
-                       Lx=70, Ly=100, tot_time= tot_time, nu_para=nu, nu_trans=nu, rp=rp,
+A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=p, pace_rate=tau + 2,
+                       Lx=70, Ly=100, tot_time= 50000, nu_para=nu, nu_trans=nu, rp=tau,
                        seed_connections=seed1, seed_prop=seed2, boundary = True, 
                        t_under = 1, t_under_on = False)
+
+np.random.seed(A.seed_prop)
 
 ###############################################################################
 # Animation function
@@ -68,8 +68,8 @@ def update_hex(frame_number, collection, A, convolve):    # Frame number passed 
 #        print(A.rp)
 #   
     else:
-        if A.t + 1 % 1000 == 0:
-            A.p_nonfire -= 0.002
+#        if A.t + 1 % 1000 == 0:
+#            A.p_nonfire -= 0.002
         
         A.cmp_animation()
 #    A.find_propagation_time()
