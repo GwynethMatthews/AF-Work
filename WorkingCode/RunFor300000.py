@@ -12,38 +12,40 @@ import sys
 
 #job_number = int(sys.argv[1])
 #
-
-full_data = []
-
-for i in range(832):
-    full_data.append(np.load('PhaseData/onesr_data_' + str(i) + '.npy'))
-    
+#
+#full_data = []
+#
+#for i in range(832):
+#    full_data.append(np.load('PhaseData/onesr_data_' + str(i) + '.npy'))
+#    
 #print(full_data[300][2][0])
     
 #print(full_data[344][6][0][7])    ### 7th value is if it hits fail safe
 
-data_num = 0
-
-run_3k = []
-
-while data_num < 2000:
-    
-    p_rand = np.random.randint(1, 10) # Vals from 0.01 to 0.09
-    job_num = np.random.randint(100, 416) * 2    # Keeps only low p values
-    repeat_number = np.random.randint(0, 100)
-    
-    data = full_data[job_num][p_rand][repeat_number]
-    
-    if data[6]:  
-        data_num += 1
-        
-        valid_data = [round(data[0])/100, round(data[1]), round(data[2])/100, round(data[4]), round(data[5])]
-        
-        run_3k.append(valid_data)
-    
-np.save('run_3k.npy', run_3k)         
+#data_num = 0
+#
+#run_3k = []
+#
+#while data_num < 2000:
+#    
+#    p_rand = np.random.randint(1, 10) # Vals from 0.01 to 0.09
+#    job_num = np.random.randint(100, 416) * 2    # Keeps only low p values
+#    repeat_number = np.random.randint(0, 100)
+#    
+#    data = full_data[job_num][p_rand][repeat_number]
+#    
+#    if data[6]:  
+#        data_num += 1
+#        
+#        valid_data = [round(data[0])/100, round(data[1]), round(data[2])/100, round(data[4]), round(data[5])]
+#        
+#        run_3k.append(valid_data)
+#    
+#np.save('run_3k.npy', run_3k)         
 
 def decreasing_p_large_time(run_3k, itr):
+    
+    two_params_data = []
     
     for k in range(2):       # 2 Param sets per job
 
@@ -60,6 +62,7 @@ def decreasing_p_large_time(run_3k, itr):
         full_data = []
                
         for i in range(2):       # i == 0 is decreasing p, i == 1 is constant p
+            print(i)
         
             avg_resting = None
             std_resting = None
@@ -70,7 +73,7 @@ def decreasing_p_large_time(run_3k, itr):
             position_of_max = None
             Fraction_of_resting_cells_last_timestep = None
             
-            p_change_resting_list = []
+            regular_resting_list = []
                     
             A = AF.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=p, pace_rate=pace,
                                    Lx=70, Ly=100, tot_time=500000, nu_para=nu, nu_trans=nu, rp=tau,
@@ -100,16 +103,16 @@ def decreasing_p_large_time(run_3k, itr):
                     
                     else:
                         if A.t == 31 * A.pace_rate: # fraction of resting cells at the last beat
-                            resting_cells_at_last_beat = float(len(A.resting[A.resting == True])) / (A.Lx * A.Ly)
+                            resting_cells_at_last_beat = float(len(A.resting[A.resting == True]))
      
                         if len(A.states[0]) != 0:   # continues to propagate
                             
                             if i == 0 and A.t % 2000 == 0 and A.t > 15000 and A.p_nonfire > 0.0006:
                                 A.p_nonfire -= 0.0003
                                 
-                                p_change_resting_cells = float(len(A.resting[A.resting == True])) / (A.Lx * A.Ly)
-                                p_change_resting_list.append(p_change_resting_cells)
-                                print('hello')
+                            if A.t % 2000 == 0:
+                                regular_resting_cells = float(len(A.resting[A.resting == True]))
+                                regular_resting_list.append(regular_resting_cells)
                         
                             A.cmp_no_sinus()
                             
@@ -122,7 +125,7 @@ def decreasing_p_large_time(run_3k, itr):
                             A.time_extinguished = A.t
                             A.stop = True
                             
-                            Fraction_of_resting_cells_last_timestep = len(A.resting[A.resting == True]) / (A.Lx * A.Ly)
+                            Fraction_of_resting_cells_last_timestep = len(A.resting[A.resting == True])
         
                             
                 else:
@@ -131,7 +134,7 @@ def decreasing_p_large_time(run_3k, itr):
                     A.time_extinguished = A.t
                     A.stop = True
         
-                    Fraction_of_resting_cells_last_timestep = len(A.resting[A.resting == True]) / (A.Lx * A.Ly)
+                    Fraction_of_resting_cells_last_timestep = len(A.resting[A.resting == True])
                     
             
             if A.t_AF > 0:
@@ -141,11 +144,11 @@ def decreasing_p_large_time(run_3k, itr):
             
                 resting_cells_minus_slice = np.array(A.resting_cells_over_time[:-200])
             
-                avg_resting = np.mean(resting_cells_minus_slice) / (A.Lx * A.Ly)    
-                std_resting = np.std(resting_cells_minus_slice) / (A.Lx * A.Ly)
-                med_resting = np.median(resting_cells_minus_slice) / (A.Lx * A.Ly)
-                max_resting = max(resting_cells_minus_slice) / (A.Lx * A.Ly)
-                min_resting = min(resting_cells_minus_slice) / (A.Lx * A.Ly)
+                avg_resting = np.mean(resting_cells_minus_slice)    
+                std_resting = np.std(resting_cells_minus_slice)
+                med_resting = np.median(resting_cells_minus_slice)
+                max_resting = max(resting_cells_minus_slice)
+                min_resting = min(resting_cells_minus_slice)
                 
                 position_of_min = np.where(resting_cells_minus_slice == min(resting_cells_minus_slice))[0][0] + AF_start # time of min
                 position_of_max = np.where(resting_cells_minus_slice == max(resting_cells_minus_slice))[0][0] + AF_start # time of max
@@ -174,22 +177,28 @@ def decreasing_p_large_time(run_3k, itr):
         #     position of min
         #     position of max
             
-            data = [nu*100, tau, p*100,     # 0, 1, 2
+            data = np.array([nu*100, tau, p*100,     # 0, 1, 2
                              A.seed_connections, A.seed_prop,       # 3, 4
                              A.fail_safe, A.AF, A.t_AF, A.time_extinguished, AF_start,   # 5, 6, 7, 8, 9
                              avg_resting, std_resting, med_resting, min_resting, max_resting,   # 10, 11, 12, 13, 14
                              resting_cells_at_last_beat, Fraction_of_resting_cells_last_timestep,   # 15, 16
-                             position_of_min, position_of_max]    # 17, 18
+                             position_of_min, position_of_max], dtype = int)    # 17, 18
         
-            data = np.append(data, p_change_resting_list)        # [19:]
+            data = np.append(data, regular_resting_list)        # [19:]
+
+            print(len(data))
         
             full_data.append(data)
         
-        np.save('long_run_decrease_p_' + str(itr) + '.npy', full_data)
+        two_params_data.append(full_data)
+       
+    two_params_data = np.array(two_params_data, dtype = int)
+    
+    np.save('long_run_decrease_p_' + str(itr) + '.npy', two_params_data)
  
 #    
-#run_3k = np.load('run_3k.npy')
-#decreasing_p_large_time(run_3k, 1)
+run_3k = np.load('run_3k.npy')
+decreasing_p_large_time(run_3k, 1)
 
 #
 #for i in range(50):
