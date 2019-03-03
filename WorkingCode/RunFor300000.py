@@ -10,7 +10,7 @@ import numpy as np
 import Atrium_Final as AF
 import sys
 
-#job_number = int(sys.argv[1])
+job_number = int(sys.argv[1])
 #
 #
 #full_data = []
@@ -198,7 +198,7 @@ def decreasing_p_large_time(run_3k, itr):
  
 #    
 run_3k = np.load('run_3k.npy')
-decreasing_p_large_time(run_3k, 1)
+decreasing_p_large_time(run_3k, job_number)
 
 #
 #for i in range(50):
