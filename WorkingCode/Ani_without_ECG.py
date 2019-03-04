@@ -35,9 +35,9 @@ resting_cells = False
 
 number_of_beats = 31
 
-nu = 0.66
+nu = 0.55
 tau = 76
-p = 0.07
+p = 0.1
 seed1 = 53517399
 seed2 = 543500048
 
