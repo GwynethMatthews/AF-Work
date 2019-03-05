@@ -35,14 +35,14 @@ resting_cells = False
 
 number_of_beats = 31
 
-nu = 0.55
-tau = 76
-p = 0.1
-seed1 = 53517399
-seed2 = 543500048
+nu = 1
+tau = 70
+p = 0.27
+seed1 = 23762876#53517399
+seed2 = 2389723#543500048
 
 A = AC.SourceSinkModel(hexagonal=True, threshold=1, p_nonfire=p, pace_rate=tau + 2,
-                       Lx=70, Ly=100, tot_time= 50000, nu_para=nu, nu_trans=nu, rp=tau,
+                       Lx=70, Ly=100, tot_time= 11000, nu_para=nu, nu_trans=nu, rp=tau,
                        seed_connections=seed1, seed_prop=seed2, boundary = True, 
                        t_under = 1, t_under_on = False)
 
@@ -76,8 +76,10 @@ def update_hex(frame_number, collection, A, convolve):    # Frame number passed 
 
     #print(len(A.states))
     ### CHANGING P_NONFIRE (smaller p_nonfire makes it more likely to fire) ###
-#    if A.t in np.arange(1210, 1210 + 200*4, 200 ):
+#    if A.t in np.arange(number_of_beats * A.pace_rate, number_of_beats * A.pace_rate + 200*7, 200 ):
 #        A.p_nonfire -= 0.01
+    if len(A.states[0]) == 0:
+        print(A.t)
 #    ### Note if p is decreasing can have errors when it reaches 0, fixed if set time for p_nonfire = 0 ###    
 #        ### CHANGING REFRACTORY PERIOD ###
 #    if A.t == 10*A.pace_rate:
@@ -263,7 +265,7 @@ if A.hexagonal:
 ###SAVING VIDEO###
 
 
-#ani.save('(Video 5) Pacing then increase rp and increase p slowly.mp4', fps=30)
+#ani.save('No p change.mp4', fps=60)
 
 
 #file_path = "NewVid.mp4"

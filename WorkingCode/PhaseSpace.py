@@ -156,15 +156,15 @@ parameters = []
 # nu, tau, p, whether the charge under threshold is conserved, amount to add to tau to get pace_rate 
 
 for j in np.arange(50, 102, 2): # tau values
-    for i in np.linspace(0.4, 0.7, 16, endpoint = True): # nu values
+    for i in np.linspace(0.4, 1, 61, endpoint = True): # nu values
     #for i in [0.4,0.5,0.6,0.7]:#np.linspace(0.35, 1, 4, endpoint = True):
-        for k in [0,0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1]: # p values
+        for k in [0,0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1,0.11,0.12,0.13,0.14,0.15,0.16,0.17,0.18,0.19,0.2,0.21,0.22,0.23,0.24,0.25, 0.26,0.27,0.28,0.29,0.3]: # p values
         #for k in [0.2,0.05,0.09]:
             parameters.extend([[i,j,k]])
             
-parameters = np.array(parameters).reshape((352,13,3))
+parameters = np.array(parameters).reshape((806,61,3))
 #parameters = np.array(parameters).reshape((26,12,3))
-s = np.random.randint(0, 2**31, (352, 13, 500, 2),dtype='int')
+s = np.random.randint(0, 2**31, (806, 61, 500, 2),dtype='int')
 
 #OnePacemakerBeat(parameters, s, 19)
 #np.save('parameters', parameters)

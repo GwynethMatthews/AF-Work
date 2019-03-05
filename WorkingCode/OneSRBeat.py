@@ -41,16 +41,14 @@ def OnePacemakerBeat(parameters=input_param, seeds=input_seeds, itr=job_number):
                 if len(A.states[0]) != 0:
                     
                     if A.t < A.tot_time:
-                        if A.t < 10 * pace:
-                            A.cmp_timestep()
+                        #if A.t < 10 * pace:
+                        #    A.cmp_timestep()
                     
-                        else:
-                        #if A.t > int((10 * pace) + (2.5 * A.L)):
-                            
+                        #else:
                             #A.AF = True # Got rid of because it makes the condition below redundant 
                             #AF_start = A.t # This will update every loop so have just set it to int((10 * pace) + (2.5 * A.L))
                         
-                            A.cmp_no_sinus() 
+                        A.cmp_no_sinus() 
                         #A.cmp_no_timestep() # Assumed this was meant to be A.cmp_no_sinus()
 
                     else:
@@ -62,10 +60,6 @@ def OnePacemakerBeat(parameters=input_param, seeds=input_seeds, itr=job_number):
                     A.time_extinguished = A.t
                     A.stop = True
                     
-            A.t_AF = int(A.time_extinguished - AF_start)
-            
-            if A.t_AF > 0:
-                A.AF = True
                 
             # nu, tau, p,whether the charge under threshold is conserved, pace_rate, repeat number, s1, s2,
             # A.fail_safe = whether it extinguishes at before tot_time, A.AF = whether it
